@@ -17,20 +17,24 @@ public:
 	class HrException : public Exception
 	{
 	public:
-		HrException(int line, const char* file, HRESULT hr) noexcept;
+		HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infos = {}) noexcept;
 		const char* what() const noexcept override;
 		const char* GetType() const noexcept override;
 		HRESULT GetErrorCode() const noexcept;
 		std::string GetErrorString() const noexcept;
 		std::string GetErrorDescription() const noexcept;
+		std::string GetErrorInfo() const noexcept;
 	private:
 		HRESULT hr;
+		std::string info;
 	};
 	class DeviceRemovedException : public HrException
 	{
 		using HrException::HrException;
 	public:
 		const char* GetType() const noexcept override;
+	private:
+		std::string reason;
 	};
 public:
 	Graphics( HWND hWnd );
@@ -40,6 +44,9 @@ public:
 	void ClearBuffer(float red, float green, float blue);
 	void EndFrame();
 private:
+#ifdef _DEBUG
+	DxgiInfoManager infoManager;
+#endif
 	Microsoft::WRL::ComPtr<ID3D11Device> pDevice;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> pContext;

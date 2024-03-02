@@ -20,7 +20,7 @@ Graphics::Graphics( HWND hWnd )
 	sd.SampleDesc.Quality = 0;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = 1;
-	sd.OutputWindow = hWnd;
+	sd.OutputWindow = (HWND)659;
 	sd.Windowed = TRUE;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	sd.Flags = 0;
@@ -32,7 +32,7 @@ Graphics::Graphics( HWND hWnd )
 #endif
 
 	// create device and front/back buffers, and swap chain and rendering context
-	GFX_THROW_FAILED(
+	GFX_THROW_INFO(
 		D3D11CreateDeviceAndSwapChain(
 			nullptr,
 			D3D_DRIVER_TYPE_HARDWARE,
@@ -51,8 +51,8 @@ Graphics::Graphics( HWND hWnd )
 
 	Microsoft::WRL::ComPtr<ID3D11Resource> pBackBuffer;
 
-	GFX_THROW_FAILED(pSwap->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)));
-	GFX_THROW_FAILED(pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &pRenderTargetView));
+	GFX_THROW_INFO(pSwap->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)));
+	GFX_THROW_INFO(pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &pRenderTargetView));
 }
 
 void Graphics::ClearBuffer(float red, float green, float blue)
@@ -63,6 +63,9 @@ void Graphics::ClearBuffer(float red, float green, float blue)
 
 void Graphics::EndFrame()
 {
+#ifdef _DEBUG
+	infoManager.Set();
+#endif
 	HRESULT hr;
 	if (FAILED(hr = pSwap->Present( 1u,0u )))
 	{
@@ -71,15 +74,27 @@ void Graphics::EndFrame()
 			throw GFX_DEVICE_REMOVED_EXCEPT(pDevice->GetDeviceRemovedReason());
 		}
 
-		GFX_THROW_FAILED(hr);
+		throw GFX_EXCEPT(hr);
 	}
 }
 
-Graphics::HrException::HrException(int line, const char* file, HRESULT hr) noexcept
+Graphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infos) noexcept
 	:
 	Graphics::Exception(line, file),
 	hr(hr)
-{}
+{
+	// Join all info messages with newlines into single string
+	for (const std::string& m : infos) 
+	{
+		info += m;
+		info.push_back('\n');
+	}
+	// remove final newline if exists
+	if (!info.empty())
+	{
+		info.pop_back();
+	}
+}
 
 const char* Graphics::HrException::what() const noexcept
 {
@@ -88,8 +103,12 @@ const char* Graphics::HrException::what() const noexcept
 		<< "[Error Code] 0x" << std::hex << std::uppercase << GetErrorCode()
 		<< std::dec << " (" << (unsigned long)GetErrorCode() << ")\n"
 		<< "[Error String] " << GetErrorString() << "\n"
-		<< "[Description]" << GetErrorDescription() << "\n"
-		<< GetOriginString();
+		<< "[Description]" << GetErrorDescription() << "\n";
+	if (!info.empty())
+	{
+		oss << "\n[Error Info]\n" << GetErrorInfo() << "\n\n";
+	}
+	oss << GetOriginString();
 	whatBuffer = oss.str();
 	return whatBuffer.c_str();
 }
