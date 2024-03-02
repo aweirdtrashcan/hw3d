@@ -32,15 +32,27 @@ class Window
 public:
 	class Exception : public ChiliException
 	{
+		using ChiliException::ChiliException;
 	public:
-		Exception( int line,const char* file,HRESULT hr ) noexcept;
-		const char* what() const noexcept override;
-		virtual const char* GetType() const noexcept;
 		static std::string TranslateErrorCode( HRESULT hr ) noexcept;
+	};
+	class HrException : public Exception
+	{
+	public:
+		HrException(int line, const char* file, HRESULT hr) noexcept;
+		const char* what() const noexcept override;
+		const char* GetType() const noexcept override;
+
 		HRESULT GetErrorCode() const noexcept;
-		std::string GetErrorString() const noexcept;
+		std::string GetErrorDescription() const noexcept;
 	private:
 		HRESULT hr;
+	};
+	class NoGfxException : public Exception
+	{
+	public:
+		using Exception::Exception;
+		const char* GetType() const noexcept override;
 	};
 private:
 	// singleton manages registration/cleanup of window class
@@ -79,8 +91,3 @@ private:
 	HWND hWnd;
 	std::unique_ptr<Graphics> pGfx;
 };
-
-
-// error exception helper macro
-#define CHWND_EXCEPT( hr ) Window::Exception( __LINE__,__FILE__,hr )
-#define CHWND_LAST_EXCEPT() Window::Exception( __LINE__,__FILE__,GetLastError() )
