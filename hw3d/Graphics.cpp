@@ -11,6 +11,13 @@
 namespace wrl = Microsoft::WRL;
 
 Graphics::Graphics( HWND hWnd )
+	:
+	modelViewProjection(
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	)
 {
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferDesc.Width = 0;
@@ -70,7 +77,7 @@ void Graphics::EndFrame()
 	infoManager.Set();
 #endif
 	HRESULT hr;
-	if (FAILED(hr = pSwap->Present( 1u,0u )))
+	if (FAILED(hr = pSwap->Present( 0u,DXGI_PRESENT_ALLOW_TEARING )))
 	{
 		if (hr == DXGI_ERROR_DEVICE_REMOVED)
 		{
@@ -81,8 +88,9 @@ void Graphics::EndFrame()
 	}
 }
 
-void Graphics::DrawTriangle()
+void Graphics::DrawTriangle(float angle, float x, float y)
 {
+	using namespace DirectX;
 	wrl::ComPtr<ID3D11Buffer> vertexBuffer;
 	wrl::ComPtr<ID3D11Buffer> indexBuffer;
 
@@ -101,7 +109,8 @@ void Graphics::DrawTriangle()
 
 	struct Vertex
 	{
-		struct {
+		struct 
+		{
 			float x;
 			float y;
 		};
@@ -122,7 +131,7 @@ void Graphics::DrawTriangle()
 		{ { -0.5f, -0.5f }, { 255, 0, 255, 255 } }
 	};
 
-	const UINT indexBufferCpu[] =
+	const USHORT indexBufferCpu[] =
 	{
 		1, 0, 3,
 		3, 0, 2
@@ -154,9 +163,34 @@ void Graphics::DrawTriangle()
 
 	GFX_THROW_INFO(pDevice->CreateBuffer(&indexBufferDesc, &indexBufferSrd, &indexBuffer));
 
-	pContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+	pContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
 
-	// Vertex Shader
+	XMMATRIX model = XMMatrixRotationZ(angle) * XMMatrixScaling(1.0f, 1.0f, 1.0f) * XMMatrixTranslation(x, y, 0.0f);
+	XMMATRIX view = XMMatrixLookAtLH({ 0.0f, 0.0f, -4.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+	XMMATRIX projection = XMMatrixPerspectiveFovLH(45.f, 800.f / 600.f, 0.1f, 1000.f);
+	XMStoreFloat4x4(&modelViewProjection, XMMatrixTranspose(model * view * projection));
+
+	D3D11_BUFFER_DESC cbDesc = {};
+	cbDesc.ByteWidth = sizeof(modelViewProjection);
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	wrl::ComPtr<ID3D11Buffer> cb;
+
+	GFX_THROW_INFO(pDevice->CreateBuffer(&cbDesc, nullptr, &cb));
+
+	D3D11_MAPPED_SUBRESOURCE mrs = {};
+
+	GFX_THROW_INFO(pContext->Map(cb.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mrs));
+
+	memcpy(mrs.pData, &modelViewProjection, sizeof(modelViewProjection));
+	
+	pContext->Unmap(cb.Get(), 0);
+
+	pContext->VSSetConstantBuffers(0, 1, cb.GetAddressOf());
+	
+		// Vertex Shader
 
 	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
 	wrl::ComPtr<ID3DBlob> pVertexShaderBlob;

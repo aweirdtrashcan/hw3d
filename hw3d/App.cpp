@@ -24,6 +24,14 @@ void App::DoFrame()
 	const float s = sinf(timer.Peek()) / 2.5f;
 	const float c = cosf(timer.Peek()) / 2.5f;
 	wnd.Gfx().ClearBuffer(s, c, 1.0f);
-	wnd.Gfx().DrawTriangle();
+	float mousePosX = static_cast<float>(wnd.mouse.GetPosX());
+	float mousePosY = static_cast<float>(wnd.mouse.GetPosY());
+	float halfWidth = static_cast<float>(wnd.GetWidth()) * 0.5f;
+	float halfHeight = static_cast<float>(wnd.GetHeight()) * 0.5f;
+
+	float x = (mousePosX / halfWidth) - 1.0f;
+	float y = (-mousePosY / halfHeight) + 1.0f;
+
+	wnd.Gfx().DrawTriangle(timer.Peek(), x, y);
 	wnd.Gfx().EndFrame();
 }

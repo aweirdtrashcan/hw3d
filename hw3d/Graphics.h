@@ -5,6 +5,8 @@
 #include <vector>
 #include "DxgiInfoManager.h"
 #include "ChiliException.h"
+#include "ChiliTimer.h"
+#include <DirectXMath.h>
 
 class Graphics
 {
@@ -52,7 +54,7 @@ public:
 	~Graphics() = default;
 	void ClearBuffer(float red, float green, float blue);
 	void EndFrame();
-	void DrawTriangle();
+	void DrawTriangle(float angle, float x, float y);
 private:
 #ifdef _DEBUG
 	DxgiInfoManager infoManager;
@@ -61,4 +63,6 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> pContext;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pRenderTargetView;
+
+	DirectX::XMFLOAT4X4 modelViewProjection;
 };
