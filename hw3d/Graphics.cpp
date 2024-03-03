@@ -86,6 +86,9 @@ void Graphics::DrawTriangle()
 	UINT stride = 0;
 	wrl::ComPtr<ID3D11Buffer> vertexBuffer;
 
+	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), nullptr);
+	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	struct Vertex
 	{
 		float x;
@@ -111,7 +114,6 @@ void Graphics::DrawTriangle()
 	GFX_THROW_INFO(pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferSrd, &vertexBuffer));
 
 	GFX_THROW_INFO_ONLY(pContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &stride));
-	GFX_THROW_INFO_ONLY(pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 
 	// Vertex Shader
 
@@ -126,6 +128,8 @@ void Graphics::DrawTriangle()
 		nullptr, 
 		&pVertexShader
 	));
+
+	pContext->VSSetShader(pVertexShader.Get(), nullptr, 0);
 
 	// Fragment Shader
 
@@ -142,18 +146,6 @@ void Graphics::DrawTriangle()
 	));
 
 	pContext->PSSetShader(pPixelShader.Get(), nullptr, 0);
-	pContext->VSSetShader(pVertexShader.Get(), nullptr, 0);
-	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), nullptr);
-
-	D3D11_VIEWPORT vp = {};
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	vp.Width = 800;
-	vp.Height = 600;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-
-	pContext->RSSetViewports(1, &vp);
 
 	D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
@@ -170,6 +162,16 @@ void Graphics::DrawTriangle()
 	);
 
 	pContext->IASetInputLayout(pInputLayout.Get());
+
+	D3D11_VIEWPORT vp = {};
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.Width = 800;
+	vp.Height = 600;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+
+	pContext->RSSetViewports(1, &vp);
 
 	GFX_THROW_INFO_ONLY(pContext->Draw((UINT)std::size(vertexBufferCpu), 0));
 }
