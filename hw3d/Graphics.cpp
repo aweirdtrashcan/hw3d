@@ -83,23 +83,49 @@ void Graphics::EndFrame()
 
 void Graphics::DrawTriangle()
 {
-	UINT stride = 0;
 	wrl::ComPtr<ID3D11Buffer> vertexBuffer;
+	wrl::ComPtr<ID3D11Buffer> indexBuffer;
 
 	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), nullptr);
 	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	D3D11_VIEWPORT vp = {};
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.Width = 800;
+	vp.Height = 600;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+
+	pContext->RSSetViewports(1, &vp);
+
 	struct Vertex
 	{
-		float x;
-		float y;
+		struct {
+			float x;
+			float y;
+		};
+		struct
+		{
+			BYTE r;
+			BYTE g;
+			BYTE b;
+			BYTE a;
+		};
 	};
 
 	const Vertex vertexBufferCpu[] =
 	{
-		{ 0.0f, 0.5f },
-		{ 0.5f, -0.5f },
-		{ -0.5f, -0.5f } 
+		{ { 0.5f, 0.5f }, { 255, 0, 0, 255 } },
+		{ { -0.5f, 0.5f }, { 0, 255, 0, 255 } },
+		{ { 0.5f, -0.5f }, { 0, 0, 255, 255 } },
+		{ { -0.5f, -0.5f }, { 255, 0, 255, 255 } }
+	};
+
+	const UINT indexBufferCpu[] =
+	{
+		1, 0, 3,
+		3, 0, 2
 	};
 
 	D3D11_BUFFER_DESC vertexBufferDesc = {};
@@ -113,7 +139,22 @@ void Graphics::DrawTriangle()
 
 	GFX_THROW_INFO(pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferSrd, &vertexBuffer));
 
-	GFX_THROW_INFO_ONLY(pContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &stride));
+	UINT stride = sizeof(Vertex);
+	UINT offset = 0;
+	pContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
+
+	D3D11_BUFFER_DESC indexBufferDesc = {};
+	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	indexBufferDesc.ByteWidth = sizeof(indexBufferCpu);
+	indexBufferDesc.StructureByteStride = sizeof(indexBufferCpu[0]);
+	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	D3D11_SUBRESOURCE_DATA indexBufferSrd = {};
+	indexBufferSrd.pSysMem = indexBufferCpu;
+
+	GFX_THROW_INFO(pDevice->CreateBuffer(&indexBufferDesc, &indexBufferSrd, &indexBuffer));
+
+	pContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
 	// Vertex Shader
 
@@ -149,7 +190,8 @@ void Graphics::DrawTriangle()
 
 	D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "Color", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
@@ -163,17 +205,7 @@ void Graphics::DrawTriangle()
 
 	pContext->IASetInputLayout(pInputLayout.Get());
 
-	D3D11_VIEWPORT vp = {};
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	vp.Width = 800;
-	vp.Height = 600;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-
-	pContext->RSSetViewports(1, &vp);
-
-	GFX_THROW_INFO_ONLY(pContext->Draw((UINT)std::size(vertexBufferCpu), 0));
+	GFX_THROW_INFO_ONLY(pContext->DrawIndexed((UINT)std::size(indexBufferCpu), 0, 0));
 }
 
 Graphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infos) noexcept
