@@ -4,6 +4,8 @@
 #include "Macros.h"
 #include "Window.h"
 
+#pragma comment(lib, "dxguid.lib")
+
 DxgiInfoManager::DxgiInfoManager()
 {
 	typedef HRESULT(WINAPI* DXGIGetDebugInterface)(REFIID, void**);
@@ -21,7 +23,7 @@ DxgiInfoManager::DxgiInfoManager()
 		throw CHWND_LAST_EXCEPT();
 	}
 
-	GFX_THROW_FAILED(debugInterface(IID_PPV_ARGS(&pDxgiInfoQueue)));
+	GFX_THROW_NOINFO(debugInterface(IID_PPV_ARGS(&pDxgiInfoQueue)));
 	messageBuffer = malloc(10000);
 }
 
@@ -43,9 +45,9 @@ std::vector<std::string> DxgiInfoManager::GetMessages() const
 	{
 		memset(messageBuffer, 0, 10000);
 		SIZE_T messageLen = 0;
-		GFX_THROW_FAILED(pDxgiInfoQueue->GetMessageA(DXGI_DEBUG_ALL, i, nullptr, &messageLen));
+		GFX_THROW_NOINFO(pDxgiInfoQueue->GetMessageA(DXGI_DEBUG_ALL, i, nullptr, &messageLen));
 		DXGI_INFO_QUEUE_MESSAGE* message = (DXGI_INFO_QUEUE_MESSAGE*)messageBuffer;
-		GFX_THROW_FAILED(pDxgiInfoQueue->GetMessageA(DXGI_DEBUG_ALL, i, message, &messageLen));
+		GFX_THROW_NOINFO(pDxgiInfoQueue->GetMessageA(DXGI_DEBUG_ALL, i, message, &messageLen));
 		messages.emplace_back(message->pDescription);
 	}
 	return messages;

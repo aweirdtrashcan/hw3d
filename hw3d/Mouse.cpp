@@ -143,7 +143,13 @@ void Mouse::TrimBuffer() noexcept
 {
 	while( buffer.size() > bufferSize )
 	{
-		buffer.pop();
+		__try {
+			buffer.pop();
+		}
+		__except(EXCEPTION_EXECUTE_HANDLER) {
+			OutputDebugStringA("Failed to pop from Mouse buffer\n");
+			break;
+		}
 	}
 }
 

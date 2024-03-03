@@ -4,7 +4,6 @@
 #include <wrl.h>
 #include <vector>
 #include "DxgiInfoManager.h"
-
 #include "ChiliException.h"
 
 class Graphics
@@ -28,6 +27,16 @@ public:
 		HRESULT hr;
 		std::string info;
 	};
+	class InfoException : public Exception
+	{
+	public:
+		InfoException(int line, const char* file, std::vector<std::string> infoMsgs);
+		const char* what() const noexcept override;
+		const char* GetType() const noexcept override;
+		std::string GetErrorInfo() const noexcept;
+	private:
+		std::string info;
+	};
 	class DeviceRemovedException : public HrException
 	{
 		using HrException::HrException;
@@ -43,6 +52,7 @@ public:
 	~Graphics() = default;
 	void ClearBuffer(float red, float green, float blue);
 	void EndFrame();
+	void DrawTriangle();
 private:
 #ifdef _DEBUG
 	DxgiInfoManager infoManager;

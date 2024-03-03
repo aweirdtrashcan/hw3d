@@ -26,13 +26,13 @@
 // get weird errors when trying to do some windows stuff, try removing some
 // (or all) of these defines (it will increase build time though).
 #define WIN32_LEAN_AND_MEAN
+#define OEMRESOURCE
 #define NOGDICAPMASKS
 #define NOSYSMETRICS
 #define NOMENUS
 #define NOICONS
 #define NOSYSCOMMANDS
 #define NORASTEROPS
-#define OEMRESOURCE
 #define NOATOM
 #define NOCLIPBOARD
 #define NOCOLOR
