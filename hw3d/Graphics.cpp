@@ -6,13 +6,13 @@
 #include <d3dcompiler.h>
 
 #pragma comment(lib,"d3d11.lib")
-#pragma comment(lib, "d3dcompiler.lib")
+#pragma comment(lib, "D3DCompiler.lib")
 
 namespace wrl = Microsoft::WRL;
 
 Graphics::Graphics( HWND hWnd )
 	:
-	modelViewProjection(
+	projection(
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
@@ -63,12 +63,63 @@ Graphics::Graphics( HWND hWnd )
 	wrl::ComPtr<ID3D11Resource> pBackBuffer;
 	GFX_THROW_INFO(pSwap->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)));
 	GFX_THROW_INFO(pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &pRenderTargetView));
+
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+
+	wrl::ComPtr<ID3D11DepthStencilState> pDSVState;
+
+	GFX_THROW_INFO(pDevice->CreateDepthStencilState(&dsDesc, &pDSVState));
+
+	pContext->OMSetDepthStencilState(pDSVState.Get(), 0);
+
+	wrl::ComPtr<ID3D11Texture2D> depthTexture;
+	D3D11_TEXTURE2D_DESC texDesc = {};
+	texDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	texDesc.ArraySize = 1;
+	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	texDesc.Height = 600;
+	texDesc.Width = 800;
+	texDesc.MipLevels = 1;
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	
+	GFX_THROW_INFO(pDevice->CreateTexture2D(&texDesc, nullptr, &depthTexture));
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC viewDesc = {};
+	viewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	viewDesc.Texture2D.MipSlice = 0;
+	viewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+
+	GFX_THROW_INFO(pDevice->CreateDepthStencilView(depthTexture.Get(), &viewDesc, &pDSV));
+
+	using namespace DirectX;
+
+	XMMATRIX view = XMMatrixLookAtLH({ 0.0f, 0.0f, 4.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f });
+	
+	XMStoreFloat4x4(&this->view, view);
 }
 
 void Graphics::ClearBuffer(float red, float green, float blue)
 {
 	FLOAT color[] = { red, green, blue, 1.0f };
 	pContext->ClearRenderTargetView(pRenderTargetView.Get(), color);
+	pContext->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+void Graphics::BeginFrame()
+{
+	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), pDSV.Get());
+
+	D3D11_VIEWPORT viewport = {};
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.Width = 800;
+	viewport.Height = 600;
+
+	pContext->RSSetViewports(1, &viewport);
 }
 
 void Graphics::EndFrame()
@@ -88,158 +139,24 @@ void Graphics::EndFrame()
 	}
 }
 
-void Graphics::DrawTriangle(float angle, float x, float y)
+DirectX::XMMATRIX Graphics::GetProjection() const noexcept
 {
-	using namespace DirectX;
-	wrl::ComPtr<ID3D11Buffer> vertexBuffer;
-	wrl::ComPtr<ID3D11Buffer> indexBuffer;
+	return DirectX::XMLoadFloat4x4(&projection);
+}
 
-	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), nullptr);
-	pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+void Graphics::SetProjection(DirectX::FXMMATRIX projection) noexcept
+{
+	DirectX::XMStoreFloat4x4(&this->projection, projection);
+}
 
-	D3D11_VIEWPORT vp = {};
-	vp.TopLeftX = 0;
-	vp.TopLeftY = 0;
-	vp.Width = 800;
-	vp.Height = 600;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
+DirectX::XMMATRIX Graphics::GetView() const noexcept
+{
+	return DirectX::XMLoadFloat4x4(&view);
+}
 
-	pContext->RSSetViewports(1, &vp);
-
-	struct Vertex
-	{
-		struct 
-		{
-			float x;
-			float y;
-		};
-		struct
-		{
-			BYTE r;
-			BYTE g;
-			BYTE b;
-			BYTE a;
-		};
-	};
-
-	const Vertex vertexBufferCpu[] =
-	{
-		{ { 0.5f, 0.5f }, { 255, 0, 0, 255 } },
-		{ { -0.5f, 0.5f }, { 0, 255, 0, 255 } },
-		{ { 0.5f, -0.5f }, { 0, 0, 255, 255 } },
-		{ { -0.5f, -0.5f }, { 255, 0, 255, 255 } }
-	};
-
-	const USHORT indexBufferCpu[] =
-	{
-		1, 0, 3,
-		3, 0, 2
-	};
-
-	D3D11_BUFFER_DESC vertexBufferDesc = {};
-	vertexBufferDesc.ByteWidth = sizeof(vertexBufferCpu);
-	vertexBufferDesc.StructureByteStride = sizeof(Vertex);
-	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-
-	D3D11_SUBRESOURCE_DATA vertexBufferSrd = {};
-	vertexBufferSrd.pSysMem = vertexBufferCpu;
-
-	GFX_THROW_INFO(pDevice->CreateBuffer(&vertexBufferDesc, &vertexBufferSrd, &vertexBuffer));
-
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
-	pContext->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
-
-	D3D11_BUFFER_DESC indexBufferDesc = {};
-	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	indexBufferDesc.ByteWidth = sizeof(indexBufferCpu);
-	indexBufferDesc.StructureByteStride = sizeof(indexBufferCpu[0]);
-	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-
-	D3D11_SUBRESOURCE_DATA indexBufferSrd = {};
-	indexBufferSrd.pSysMem = indexBufferCpu;
-
-	GFX_THROW_INFO(pDevice->CreateBuffer(&indexBufferDesc, &indexBufferSrd, &indexBuffer));
-
-	pContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0);
-
-	XMMATRIX model = XMMatrixRotationZ(angle) * XMMatrixScaling(1.0f, 1.0f, 1.0f) * XMMatrixTranslation(x, y, 0.0f);
-	XMMATRIX view = XMMatrixLookAtLH({ 0.0f, 0.0f, -4.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
-	XMMATRIX projection = XMMatrixPerspectiveFovLH(45.f, 800.f / 600.f, 0.1f, 1000.f);
-	XMStoreFloat4x4(&modelViewProjection, XMMatrixTranspose(model * view * projection));
-
-	D3D11_BUFFER_DESC cbDesc = {};
-	cbDesc.ByteWidth = sizeof(modelViewProjection);
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	wrl::ComPtr<ID3D11Buffer> cb;
-
-	GFX_THROW_INFO(pDevice->CreateBuffer(&cbDesc, nullptr, &cb));
-
-	D3D11_MAPPED_SUBRESOURCE mrs = {};
-
-	GFX_THROW_INFO(pContext->Map(cb.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mrs));
-
-	memcpy(mrs.pData, &modelViewProjection, sizeof(modelViewProjection));
-	
-	pContext->Unmap(cb.Get(), 0);
-
-	pContext->VSSetConstantBuffers(0, 1, cb.GetAddressOf());
-	
-		// Vertex Shader
-
-	wrl::ComPtr<ID3D11VertexShader> pVertexShader;
-	wrl::ComPtr<ID3DBlob> pVertexShaderBlob;
-
-	GFX_THROW_INFO(D3DReadFileToBlob(L".\\VertexShader.cso", &pVertexShaderBlob));
-
-	GFX_THROW_INFO(pDevice->CreateVertexShader(
-		pVertexShaderBlob->GetBufferPointer(), 
-		pVertexShaderBlob->GetBufferSize(), 
-		nullptr, 
-		&pVertexShader
-	));
-
-	pContext->VSSetShader(pVertexShader.Get(), nullptr, 0);
-
-	// Fragment Shader
-
-	wrl::ComPtr<ID3D11PixelShader> pPixelShader;
-	wrl::ComPtr<ID3DBlob> pPixelShaderBlob;
-
-	GFX_THROW_INFO(D3DReadFileToBlob(L".\\PixelShader.cso", &pPixelShaderBlob));
-
-	GFX_THROW_INFO(pDevice->CreatePixelShader(
-		pPixelShaderBlob->GetBufferPointer(),
-		pPixelShaderBlob->GetBufferSize(),
-		nullptr,
-		&pPixelShader
-	));
-
-	pContext->PSSetShader(pPixelShader.Get(), nullptr, 0);
-
-	D3D11_INPUT_ELEMENT_DESC ied[] =
-	{
-		{ "Position", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "Color", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-	};
-
-	wrl::ComPtr<ID3D11InputLayout> pInputLayout;
-	pDevice->CreateInputLayout(
-		ied,
-		(UINT)std::size(ied),
-		pVertexShaderBlob->GetBufferPointer(),
-		pVertexShaderBlob->GetBufferSize(),
-		&pInputLayout
-	);
-
-	pContext->IASetInputLayout(pInputLayout.Get());
-
-	GFX_THROW_INFO_ONLY(pContext->DrawIndexed((UINT)std::size(indexBufferCpu), 0, 0));
+void Graphics::DrawIndexed(UINT indexCount)
+{
+	GFX_THROW_INFO_ONLY(pContext->DrawIndexed(indexCount, 0, 0));
 }
 
 Graphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infos) noexcept

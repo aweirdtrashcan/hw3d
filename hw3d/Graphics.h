@@ -10,6 +10,7 @@
 
 class Graphics
 {
+	friend class Bindable;
 public:
 	class Exception : public ChiliException
 	{
@@ -53,8 +54,12 @@ public:
 	Graphics& operator=( const Graphics& ) = delete;
 	~Graphics() = default;
 	void ClearBuffer(float red, float green, float blue);
+	void BeginFrame();
 	void EndFrame();
-	void DrawTriangle(float angle, float x, float y);
+	DirectX::XMMATRIX GetProjection() const noexcept;
+	void SetProjection(DirectX::FXMMATRIX projection) noexcept;
+	DirectX::XMMATRIX GetView() const noexcept;
+	void DrawIndexed(UINT indexCount);
 private:
 #ifdef _DEBUG
 	DxgiInfoManager infoManager;
@@ -63,6 +68,8 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain> pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> pContext;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pRenderTargetView;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
 
-	DirectX::XMFLOAT4X4 modelViewProjection;
+	DirectX::XMFLOAT4X4 projection;
+	DirectX::XMFLOAT4X4 view;
 };

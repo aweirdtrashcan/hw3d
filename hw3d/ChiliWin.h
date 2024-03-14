@@ -19,9 +19,11 @@
 ******************************************************************************************/
 #pragma once
 
+#ifndef _WIN32_WINNT
 // target Windows 7 or later
 #define _WIN32_WINNT 0x0601
 #include <sdkddkver.h>
+#endif
 // The following #defines disable a bunch of unused windows stuff. If you 
 // get weird errors when trying to do some windows stuff, try removing some
 // (or all) of these defines (it will increase build time though).
@@ -60,6 +62,8 @@
 #define NOIMAGE
 #define NOTAPE
 
+#ifndef STRICT
 #define STRICT
+#endif
 
 #include <Windows.h>

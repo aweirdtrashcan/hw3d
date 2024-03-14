@@ -78,8 +78,8 @@ public:
 	void SetTitle( const std::string& title );
 	static std::optional<int> ProcessMessages();
 	Graphics& Gfx();
-	int GetWidth() { return width; }
-	int GetHeight() { return height; }
+	int GetWidth() const { return width; }
+	int GetHeight() const { return height; }
 private:
 	static LRESULT CALLBACK HandleMsgSetup( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;
 	static LRESULT CALLBACK HandleMsgThunk( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;
