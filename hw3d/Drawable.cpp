@@ -3,14 +3,18 @@
 #include "IndexBuffer.h"
 #include "Graphics.h"
 
-#define ILLEGAL_BINDABLE_STATE(reason) IllegalBindableStateException(__LINE__, __FILE__, (reason))
-
 void Drawable::Draw(Graphics* pGfx) const noexcept(!_DEBUG)
 {
     for (const std::unique_ptr<Bindable>& b : binds) 
     {
         b->Bind(pGfx);
     }
+
+    for (const std::unique_ptr<Bindable>& b : GetStaticBinds())
+    {
+        b->Bind(pGfx);
+    }
+    
     pGfx->DrawIndexed(pIndexBuffer->GetCount());
 }
 

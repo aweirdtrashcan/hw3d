@@ -7,10 +7,11 @@ class TransformCbuf : public Bindable
 {
 public:
 	TransformCbuf(Graphics* pGfx, const Drawable& parent);
+	~TransformCbuf();
 	virtual void Bind(Graphics* pGfx) noexcept override;
 
 private:
-	VertexConstantBuffer<DirectX::XMFLOAT4X4> vcbuf;
+	static inline VertexConstantBuffer<DirectX::XMFLOAT4X4>* vcbuf;
 	const Drawable& parent;
 };
 

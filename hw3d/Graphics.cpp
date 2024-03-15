@@ -97,9 +97,12 @@ Graphics::Graphics( HWND hWnd )
 
 	using namespace DirectX;
 
-	XMMATRIX view = XMMatrixLookAtLH({ 0.0f, 0.0f, 4.0f, 0.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 0.0f });
+	XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f);
+	XMVECTOR target = XMVectorZero();
+	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	XMMATRIX m_view = XMMatrixLookAtLH(pos, target, up);
 	
-	XMStoreFloat4x4(&this->view, view);
+	XMStoreFloat4x4(&view, m_view);
 }
 
 void Graphics::ClearBuffer(float red, float green, float blue)
@@ -128,7 +131,7 @@ void Graphics::EndFrame()
 	infoManager.Set();
 #endif
 	HRESULT hr;
-	if (FAILED(hr = pSwap->Present( 0u,DXGI_PRESENT_ALLOW_TEARING )))
+	if (FAILED(hr = pSwap->Present( 1u,0u )))
 	{
 		if (hr == DXGI_ERROR_DEVICE_REMOVED)
 		{
@@ -159,7 +162,7 @@ void Graphics::DrawIndexed(UINT indexCount)
 	GFX_THROW_INFO_ONLY(pContext->DrawIndexed(indexCount, 0, 0));
 }
 
-Graphics::HrException::HrException(int line, const char* file, HRESULT hr, std::vector<std::string> infos) noexcept
+Graphics::HrException::HrException(int line, const char* file, HRESULT hr, const std::vector<std::string>& infos) noexcept
 	:
 	Graphics::Exception(line, file),
 	hr(hr)

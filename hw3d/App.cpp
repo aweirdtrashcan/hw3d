@@ -41,9 +41,13 @@ void App::DoFrame()
 	wnd.Gfx().BeginFrame();
 	wnd.Gfx().ClearBuffer(s, c, 1.0f);
 
+	static float lastTime = 0.0f;
+
+	float deltaTime = timer.Mark();
+
 	for (auto& b : boxes)
 	{
-		b->Update(timer.Peek());
+		b->Update(deltaTime);
 		b->Draw(&wnd.Gfx());
 	}
 
