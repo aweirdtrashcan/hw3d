@@ -122,7 +122,7 @@ std::optional<int> Window::ProcessMessages()
 	while( PeekMessage( &msg,nullptr,0,0,PM_REMOVE ) )
 	{
 		// check for quit because peekmessage does not signal this via return val
-		if( msg.message == WM_QUIT )
+		if (msg.message == WM_QUIT)
 		{
 			// return optional wrapping int (arg to PostQuitMessage is in wparam) signals quit
 			return (int)msg.wParam;

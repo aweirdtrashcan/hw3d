@@ -43,7 +43,6 @@
 #define NOKERNEL
 #define NONLS
 #define NOMEMMGR
-#define NOMETAFILE
 #define NOMINMAX
 #define NOOPENFILE
 #define NOSCROLL
@@ -66,4 +65,5 @@
 #define STRICT
 #endif
 
+#include <Unknwn.h>
 #include <Windows.h>
