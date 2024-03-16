@@ -20,8 +20,11 @@
 #include "Window.h"
 #include <sstream>
 #include "resource.h"
+#include "imgui_impl_win32.h"
 
 #include "Macros.h"
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // Window Class Stuff
 Window::WindowClass Window::WindowClass::wndClass;
@@ -98,12 +101,15 @@ Window::Window( int width,int height,const char* name )
 	}
 	// newly created windows start off as hidden
 	ShowWindow( hWnd,SW_SHOWDEFAULT );
+	// init imgui win32 impl
+	ImGui_ImplWin32_Init(hWnd);
 	// create graphics object
-	pGfx = std::make_unique<Graphics>( hWnd );
+	pGfx = std::make_unique<Graphics>( hWnd, width, height );
 }
 
 Window::~Window()
 {
+	ImGui_ImplWin32_Shutdown();
 	DestroyWindow( hWnd );
 }
 
@@ -175,6 +181,10 @@ LRESULT CALLBACK Window::HandleMsgThunk( HWND hWnd,UINT msg,WPARAM wParam,LPARAM
 
 LRESULT Window::HandleMsg( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept
 {
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+	{
+		return true;
+	}
 	switch( msg )
 	{
 	// we don't want the DefProc to handle this message because

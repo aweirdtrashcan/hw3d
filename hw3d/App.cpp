@@ -8,6 +8,10 @@
 #include "GDIPlusManager.h"
 #include "Surface.h"
 
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
+#include "imgui.h"
+
 #include <memory>
 
 #pragma comment (lib,"Gdiplus.lib")
@@ -16,7 +20,8 @@ GDIPlusManager gdipm;
 
 App::App()
 	:
-	wnd( 800,600,"The Donkey Fart Box" )
+	wnd( 1280,720,"The Donkey Fart Box" ),
+	light(&wnd.Gfx())
 {
 	class Factory
 	{
@@ -27,33 +32,13 @@ App::App()
 			switch (typedist(rng))
 			{
 			case 0:
-				return std::make_unique<Pyramid>(
-					gfx, rng, adist, ddist,
-					odist, rdist
-				);
-			case 1:
 				return std::make_unique<Box>(
 					gfx, rng, adist, ddist,
 					odist, rdist, bdist
 				);
-			case 2:
-				return std::make_unique<Melon>(
-					gfx, rng, adist, ddist,
-					odist, rdist, longdist, latdist
-				);
-			case 3:
-				return std::make_unique<Sheet>(
-					gfx, rng, adist, ddist,
-					odist, rdist
-				);
-			case 4:
-				return std::make_unique<SkinnedBox>(
-					gfx, rng, adist, ddist,
-					odist, rdist
-				);
 			default:
 				DebugBreak();
-				break;
+				return nullptr;
 			}
 		}
 	private:
@@ -66,16 +51,27 @@ App::App()
 		std::uniform_real_distribution<float> bdist{ 0.4f, 3.0f };
 		std::uniform_int_distribution<int> latdist{ 5, 20 };
 		std::uniform_int_distribution<int> longdist{ 10, 40 };
-		std::uniform_int_distribution<int> typedist{ 0, 4 };
+		std::uniform_int_distribution<int> typedist{ 0, 0 };
 	};
 
-	Factory f(&wnd.Gfx());
-	drawables.reserve(nDrawables);
-	std::generate_n(std::back_inserter(drawables), nDrawables, f);
+	Factory f( &wnd.Gfx() );
+	drawables.reserve( nDrawables );
+	std::generate_n( std::back_inserter( drawables ), nDrawables, f );
 
 	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveFovLH(45.f, (float)wnd.GetWidth() / (float)wnd.GetHeight(), 0.1f, 1000.f));
 
-	const Surface s = Surface::FromFile("Images\\kappa50.png");
+	const Surface s = Surface::FromFile( "Images\\kappa50.png" );
+
+	buffer = (char*)malloc( 1000 );
+	memset( buffer, 0, 1000 );
+}
+
+App::~App()
+{
+	if ( buffer ) {
+		free( buffer );
+		buffer = nullptr;
+	}
 }
 
 int App::Go()
@@ -100,21 +96,37 @@ int App::Go()
 
 void App::DoFrame()
 {
-	const float s = sinf(timer.Peek()) / 2.5f;
-	const float c = cosf(timer.Peek()) / 2.5f;
-	
-	wnd.Gfx().BeginFrame();
-	wnd.Gfx().ClearBuffer(s, c, 1.0f);
+	const float s = sinf( timer.Peek() ) / 2.5f;
+	const float c = cosf( timer.Peek() ) / 2.5f;
+	wnd.Gfx().SetView(camera.GetMatrix());
+	light.Bind(&wnd.Gfx());
 
-	static float lastTime = 0.0f;
+	wnd.Gfx().BeginFrame( s, c, 1.0f );
 
-	float deltaTime = timer.Mark();
+	float deltaTime = timer.Mark() * speedFactor;
 
-	for (auto& b : drawables)
+	for ( auto& b : drawables )
 	{
-		b->Update(wnd.kbd.KeyIsPressed(VK_SPACE) ? 0.0f : deltaTime);
-		b->Draw(&wnd.Gfx());
+		b->Update( wnd.kbd.KeyIsPressed( VK_SPACE ) ? 0.0f : deltaTime );
+		b->Draw( &wnd.Gfx() );
 	}
 
+	light.Draw(&wnd.Gfx());
+	light.SpawnControlWindow();
+	SpawnImguiWindow();
+	camera.SpawnControlWindow();
+
 	wnd.Gfx().EndFrame();
+}
+
+void App::SpawnImguiWindow()
+{
+	if (ImGui::Begin("Simulation Speed"))
+	{
+		const float framerate = ImGui::GetIO().Framerate;
+		ImGui::SliderFloat("Speed Factor", &speedFactor, 0.0f, 4.0f);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", framerate / 1000.f, framerate);
+		ImGui::InputText("Butts", buffer, 1000);
+	}
+	ImGui::End();
 }

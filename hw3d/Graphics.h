@@ -49,26 +49,34 @@ public:
 		std::string reason;
 	};
 public:
-	Graphics( HWND hWnd );
+	Graphics( HWND hWnd, UINT windowWidth, UINT windowHeight );
 	Graphics( const Graphics& ) = delete;
 	Graphics& operator=( const Graphics& ) = delete;
-	~Graphics() = default;
-	void ClearBuffer(float red, float green, float blue);
-	void BeginFrame();
+	~Graphics();
+	void BeginFrame(float red, float green, float blue);
 	void EndFrame();
 	DirectX::XMMATRIX GetProjection() const noexcept;
 	void SetProjection(DirectX::FXMMATRIX projection) noexcept;
 	DirectX::XMMATRIX GetView() const noexcept;
+	void SetView(DirectX::FXMMATRIX view) noexcept;
+	inline void EnableImgui() { imguiEnabled = true; }
+	inline void DisableImgui() { imguiEnabled = false; };
+	inline bool IsImguiEnabled() const { return imguiEnabled; }
 	void DrawIndexed(UINT indexCount);
 private:
 #ifdef _DEBUG
 	DxgiInfoManager infoManager;
 #endif
+
+	UINT windowWidth, windowHeight;
+
 	Microsoft::WRL::ComPtr<ID3D11Device> pDevice;
 	Microsoft::WRL::ComPtr<IDXGISwapChain> pSwap;
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> pContext;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> pRenderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> pDSV;
+	D3D11_VIEWPORT viewport = {};
+	bool imguiEnabled = true;
 
 	DirectX::XMFLOAT4X4 projection;
 	DirectX::XMFLOAT4X4 view;

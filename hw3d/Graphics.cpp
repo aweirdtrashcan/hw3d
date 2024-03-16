@@ -5,23 +5,28 @@
 #include "Macros.h"
 #include <d3dcompiler.h>
 
+#include "imgui_impl_dx11.h"
+#include "imgui_impl_win32.h"
+
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 
 namespace wrl = Microsoft::WRL;
 
-Graphics::Graphics( HWND hWnd )
+Graphics::Graphics( HWND hWnd, UINT windowWidth, UINT windowHeight )
 	:
 	projection(
 		1.0f, 0.0f, 0.0f, 0.0f,
 		0.0f, 1.0f, 0.0f, 0.0f,
 		0.0f, 0.0f, 1.0f, 0.0f,
 		0.0f, 0.0f, 0.0f, 1.0f
-	)
+	),
+	windowHeight(windowHeight),
+	windowWidth(windowWidth)
 {
 	DXGI_SWAP_CHAIN_DESC sd = {};
-	sd.BufferDesc.Width = 0;
-	sd.BufferDesc.Height = 0;
+	sd.BufferDesc.Width = windowWidth;
+	sd.BufferDesc.Height = windowHeight;
 	sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	sd.BufferDesc.RefreshRate.Numerator = 0;
 	sd.BufferDesc.RefreshRate.Denominator = 0;
@@ -80,8 +85,8 @@ Graphics::Graphics( HWND hWnd )
 	texDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	texDesc.ArraySize = 1;
 	texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	texDesc.Height = 600;
-	texDesc.Width = 800;
+	texDesc.Height = windowHeight;
+	texDesc.Width = windowWidth;
 	texDesc.MipLevels = 1;
 	texDesc.SampleDesc.Count = 1;
 	texDesc.SampleDesc.Quality = 0;
@@ -95,34 +100,34 @@ Graphics::Graphics( HWND hWnd )
 
 	GFX_THROW_INFO(pDevice->CreateDepthStencilView(depthTexture.Get(), &viewDesc, &pDSV));
 
-	using namespace DirectX;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.Width = (FLOAT)windowWidth;
+	viewport.Height = (FLOAT)windowHeight;
 
-	XMVECTOR pos = XMVectorSet(0.0f, 0.0f, -5.0f, 1.0f);
-	XMVECTOR target = XMVectorZero();
-	XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	XMMATRIX m_view = XMMatrixLookAtLH(pos, target, up);
-	
-	XMStoreFloat4x4(&view, m_view);
+	ImGui_ImplDX11_Init(pDevice.Get(), pContext.Get());
 }
 
-void Graphics::ClearBuffer(float red, float green, float blue)
+Graphics::~Graphics()
 {
+	ImGui_ImplDX11_Shutdown();
+}
+
+void Graphics::BeginFrame(float red, float green, float blue)
+{
+	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), pDSV.Get());
+	pContext->RSSetViewports(1, &viewport);
+	
 	FLOAT color[] = { red, green, blue, 1.0f };
 	pContext->ClearRenderTargetView(pRenderTargetView.Get(), color);
 	pContext->ClearDepthStencilView(pDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
-}
 
-void Graphics::BeginFrame()
-{
-	pContext->OMSetRenderTargets(1, pRenderTargetView.GetAddressOf(), pDSV.Get());
-
-	D3D11_VIEWPORT viewport = {};
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	viewport.Width = 800;
-	viewport.Height = 600;
-
-	pContext->RSSetViewports(1, &viewport);
+	if (imguiEnabled) 
+	{
+		ImGui_ImplDX11_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+	}
 }
 
 void Graphics::EndFrame()
@@ -130,6 +135,13 @@ void Graphics::EndFrame()
 #ifdef _DEBUG
 	infoManager.Set();
 #endif
+
+	if (imguiEnabled)
+	{
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	}
+
 	HRESULT hr;
 	if (FAILED(hr = pSwap->Present( 1u,0u )))
 	{
@@ -155,6 +167,11 @@ void Graphics::SetProjection(DirectX::FXMMATRIX projection) noexcept
 DirectX::XMMATRIX Graphics::GetView() const noexcept
 {
 	return DirectX::XMLoadFloat4x4(&view);
+}
+
+void Graphics::SetView(DirectX::FXMMATRIX view) noexcept
+{
+	DirectX::XMStoreFloat4x4(&this->view, view);
 }
 
 void Graphics::DrawIndexed(UINT indexCount)

@@ -6,7 +6,7 @@ TransformCbuf::TransformCbuf(Graphics* pGfx, const Drawable& parent)
 {
 	if (!vcbuf)
 	{
-		vcbuf = new VertexConstantBuffer<DirectX::XMFLOAT4X4>(pGfx);
+		vcbuf = new VertexConstantBuffer<Transforms>(pGfx);
 	}
 }
 
@@ -21,12 +21,24 @@ TransformCbuf::~TransformCbuf()
 
 void TransformCbuf::Bind(Graphics* pGfx) noexcept
 {
-	DirectX::XMMATRIX m = DirectX::XMMatrixTranspose(parent.GetTransformXM() * pGfx->GetView() * pGfx->GetProjection());
-	DirectX::XMFLOAT4X4 mvp;
-	DirectX::XMStoreFloat4x4(&mvp, m);
+	Transforms transforms;
+
+	const DirectX::XMMATRIX& model = parent.GetTransformXM();
+	const DirectX::XMMATRIX& view = pGfx->GetView();
+
+	DirectX::XMStoreFloat4x4(&transforms.modelViewProj, 
+		DirectX::XMMatrixTranspose(
+			model *
+			view *
+			pGfx->GetProjection()
+		)
+	);
+
+	DirectX::XMStoreFloat4x4(&transforms.modelView, DirectX::XMMatrixTranspose(model ));
+
 	vcbuf->Update(
 		pGfx,
-		mvp
+		transforms
 	);
 	vcbuf->Bind(pGfx);
 }
