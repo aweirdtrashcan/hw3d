@@ -1,12 +1,12 @@
 #include "TransformCbuf.h"
 
-TransformCbuf::TransformCbuf(Graphics* pGfx, const Drawable& parent)
+TransformCbuf::TransformCbuf(Graphics* pGfx, const Drawable& parent, UINT slot)
 	:
 	parent(parent)
 {
 	if (!vcbuf)
 	{
-		vcbuf = new VertexConstantBuffer<Transforms>(pGfx);
+		vcbuf = new VertexConstantBuffer<Transforms>(pGfx, slot);
 	}
 }
 
@@ -34,7 +34,8 @@ void TransformCbuf::Bind(Graphics* pGfx) noexcept
 		)
 	);
 
-	DirectX::XMStoreFloat4x4(&transforms.modelView, DirectX::XMMatrixTranspose(model ));
+	DirectX::XMStoreFloat4x4(&transforms.model, DirectX::XMMatrixTranspose(model));
+	DirectX::XMStoreFloat4x4(&transforms.modelView, DirectX::XMMatrixTranspose(model * view));
 
 	vcbuf->Update(
 		pGfx,

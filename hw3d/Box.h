@@ -1,5 +1,6 @@
 #pragma once
 #include "DrawableBase.h"
+#include "ShaderStructs.h"
 
 class Box : public DrawableBase<Box>
 {
@@ -10,9 +11,15 @@ public:
 		std::uniform_real_distribution<float>& ddist,
 		std::uniform_real_distribution<float>& odist,
 		std::uniform_real_distribution<float>& rdist,
-		std::uniform_real_distribution<float>& bdist);
+		std::uniform_real_distribution<float>& bdist,
+		DirectX::XMFLOAT3 material);
 	void Update(float dt) noexcept override;
 	virtual DirectX::XMMATRIX GetTransformXM() const noexcept override;
+	bool SpawnControlWindow(Graphics* gfx) noexcept;
+	void SetId(int id) noexcept { this->id = id; }
+	int GetId() const noexcept { return id; }
+private:
+	void SyncMaterial(Graphics* gfx) noexcept(!_DEBUG);
 private:
 	// positional
 	float r;
@@ -30,4 +37,6 @@ private:
 	float dphi;
 	float dchi;
 	DirectX::XMFLOAT3X3 mt;
+	PSMaterialConstant materialConstants;
+	int id;
 };

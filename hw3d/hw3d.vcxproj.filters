@@ -43,6 +43,9 @@
     <Filter Include="Source Files\imgui\backends">
       <UniqueIdentifier>{270e8d63-ea52-456d-8e61-76f3d3efd2d5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ShaderStructs">
+      <UniqueIdentifier>{9ecec770-8be8-4fc9-ab53-5033af1e9aa3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinMain.cpp">
@@ -104,9 +107,6 @@
     </ClCompile>
     <ClCompile Include="Topology.cpp">
       <Filter>Source Files\Bindable</Filter>
-    </ClCompile>
-    <ClCompile Include="Melon.cpp">
-      <Filter>Source Files\Drawable</Filter>
     </ClCompile>
     <ClCompile Include="GDIPlusManager.cpp">
       <Filter>Source Files</Filter>
@@ -263,9 +263,6 @@
     <ClInclude Include="Pyramid.h">
       <Filter>Header Files\Drawable</Filter>
     </ClInclude>
-    <ClInclude Include="Melon.h">
-      <Filter>Header Files\Drawable</Filter>
-    </ClInclude>
     <ClInclude Include="GDIPlusManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -322,6 +319,12 @@
     </ClInclude>
     <ClInclude Include="SolidSphere.h">
       <Filter>Header Files\Drawable</Filter>
+    </ClInclude>
+    <ClInclude Include="PSMaterialConstant.h">
+      <Filter>Header Files\ShaderStructs</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderStructs.h">
+      <Filter>Header Files\ShaderStructs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

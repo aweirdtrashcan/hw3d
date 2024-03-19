@@ -28,7 +28,9 @@ public:
 		GetContext(pGfx)->Unmap(buffer.Get(), 0);
 	}
 
-	ConstantBuffer(Graphics* pGfx, const C& data)
+	ConstantBuffer(Graphics* pGfx, const C& data, UINT slot)
+		:
+		bindSlot(slot)
 	{
 		INFOMAN(pGfx);
 
@@ -43,7 +45,9 @@ public:
 
 		GFX_THROW_INFO(GetDevice(pGfx)->CreateBuffer(&desc, &srd, &buffer));
 	}
-	ConstantBuffer(Graphics* pGfx)
+	ConstantBuffer(Graphics* pGfx, UINT slot)
+		:
+		bindSlot(slot)
 	{
 		INFOMAN(pGfx);
 
@@ -58,6 +62,7 @@ public:
 
 protected:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> buffer;
+	UINT bindSlot;
 };
 
 template<typename C>
@@ -69,7 +74,7 @@ public:
 	using ConstantBuffer<C>::ConstantBuffer;
 	virtual void Bind(Graphics* pGfx) noexcept override
 	{
-		GetContext(pGfx)->PSSetConstantBuffers(0, 1, buffer.GetAddressOf());
+		GetContext(pGfx)->PSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
 	}
 };
 
@@ -82,6 +87,6 @@ public:
 	using ConstantBuffer<C>::ConstantBuffer;
 	virtual void Bind(Graphics* pGfx) noexcept override
 	{
-		GetContext(pGfx)->VSSetConstantBuffers(0, 1, buffer.GetAddressOf());
+		GetContext(pGfx)->VSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
 	}
 };

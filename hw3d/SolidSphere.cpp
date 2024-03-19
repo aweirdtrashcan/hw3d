@@ -25,12 +25,10 @@ SolidSphere::SolidSphere(Graphics* gfx, float radius)
 
 		AddStaticBind(std::make_unique<PixelShader>(gfx, L"SolidPS.cso"));
 
-		struct PSColorConstant
-		{
-			dx::XMFLOAT3 color = { 1.0f,1.0f,1.0f };
-			float padding;
-		} colorConst;
-		AddStaticBind(std::make_unique<PixelConstantBuffer<PSColorConstant>>(gfx, colorConst));
+		std::unique_ptr<PixelConstantBuffer<PSColorConstant>> pCb = std::make_unique<PixelConstantBuffer<PSColorConstant>>(gfx, colorConst, 0);
+		cBuf = pCb.get();
+
+		AddStaticBind(std::move(pCb));
 
 		const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
 		{
@@ -58,4 +56,13 @@ void SolidSphere::SetPos(const DirectX::XMFLOAT3& pos) noexcept
 DirectX::XMMATRIX SolidSphere::GetTransformXM() const noexcept
 {
 	return DirectX::XMMatrixTranslation(pos.x, pos.y, pos.z);
+}
+
+void SolidSphere::SetColor(Graphics* gfx, const DirectX::XMFLOAT3& color) noexcept
+{
+	if (cBuf)
+	{
+		colorConst.color = color;
+		cBuf->Update(gfx, colorConst);
+	}
 }

@@ -4,16 +4,22 @@
 
 DirectX::XMMATRIX Camera::GetMatrix() const noexcept
 {
-	float x = r * cosf(theta) * sinf(phi);
-	float y = r * cosf(phi);
-	float z = r * sinf(theta) * sinf(phi);
-
-	DirectX::XMVECTOR pos = DirectX::XMVectorSet(x, y, z, 1.0f);
+	
+	DirectX::XMVECTOR pos = GetPosition();
 	DirectX::XMVECTOR target = DirectX::XMVectorZero();
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	DirectX::XMMATRIX cameraMat = DirectX::XMMatrixLookAtLH(pos, target, up) *
 		DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 	return cameraMat;
+}
+
+DirectX::XMVECTOR Camera::GetPosition() const noexcept
+{
+	float x = r * cosf(theta) * sinf(phi);
+	float y = r * cosf(phi);
+	float z = r * sinf(theta) * sinf(phi);
+
+	return DirectX::XMVectorSet(x, y, z, 1.0f);
 }
 
 void Camera::SpawnControlWindow() noexcept

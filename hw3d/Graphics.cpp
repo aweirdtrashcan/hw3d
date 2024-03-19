@@ -11,6 +11,14 @@
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 
+__forceinline HRESULT presentVsync(IDXGISwapChain* swapChain) {
+	return swapChain->Present(1u, 0u);
+}
+
+__forceinline HRESULT presentNoVsync(IDXGISwapChain* swapChain) {
+	return swapChain->Present(0u, DXGI_PRESENT_ALLOW_TEARING);
+}
+
 namespace wrl = Microsoft::WRL;
 
 Graphics::Graphics( HWND hWnd, UINT windowWidth, UINT windowHeight )
@@ -24,6 +32,8 @@ Graphics::Graphics( HWND hWnd, UINT windowWidth, UINT windowHeight )
 	windowHeight(windowHeight),
 	windowWidth(windowWidth)
 {
+	presentFunctions[0] = presentNoVsync;
+	presentFunctions[1] = presentVsync;
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferDesc.Width = windowWidth;
 	sd.BufferDesc.Height = windowHeight;
@@ -143,7 +153,7 @@ void Graphics::EndFrame()
 	}
 
 	HRESULT hr;
-	if (FAILED(hr = pSwap->Present( 1u,0u )))
+	if (FAILED(hr = presentFunctions[bEnableVSync](pSwap.Get())))
 	{
 		if (hr == DXGI_ERROR_DEVICE_REMOVED)
 		{

@@ -8,6 +8,8 @@
 #include "ChiliTimer.h"
 #include <DirectXMath.h>
 
+typedef HRESULT(*PresentFuncPtr)(IDXGISwapChain* swapChain);
+
 class Graphics
 {
 	friend class Bindable;
@@ -63,6 +65,7 @@ public:
 	inline void DisableImgui() { imguiEnabled = false; };
 	inline bool IsImguiEnabled() const { return imguiEnabled; }
 	void DrawIndexed(UINT indexCount);
+	inline bool& GetIsVsyncEnabled() noexcept { return bEnableVSync; }
 private:
 #ifdef _DEBUG
 	DxgiInfoManager infoManager;
@@ -80,4 +83,6 @@ private:
 
 	DirectX::XMFLOAT4X4 projection;
 	DirectX::XMFLOAT4X4 view;
+	PresentFuncPtr presentFunctions[2];
+	bool bEnableVSync = true;
 };

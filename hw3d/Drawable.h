@@ -37,9 +37,20 @@ public:
 protected:
 	void AddBind(std::unique_ptr<Bindable> bind);
 	void AddIndexBuffer(std::unique_ptr<IndexBuffer> bind);
-private:
 	virtual const std::vector<std::unique_ptr<Bindable>>& GetStaticBinds() const noexcept = 0;
 	virtual void SetIndexFromStatic() noexcept = 0;
+	template<class T>
+	T* QueryBindable() noexcept
+	{
+		for (const std::unique_ptr<Bindable>& bind : binds)
+		{
+			if (T* b = dynamic_cast<T*>(bind.get()))
+			{
+				return b;
+			}
+		}
+		return nullptr;
+	}
 private:
 	const class IndexBuffer* pIndexBuffer = nullptr;
 	std::vector<std::unique_ptr<Bindable>> binds;

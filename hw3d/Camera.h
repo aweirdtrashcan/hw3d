@@ -8,6 +8,7 @@ public:
 	DirectX::XMMATRIX GetMatrix() const noexcept;
 	void SpawnControlWindow() noexcept;
 	void Reset() noexcept;
+	DirectX::XMVECTOR GetPosition() const noexcept;
 private:
 	float r = 20.f;
 	float theta = DirectX::XM_PIDIV2;
