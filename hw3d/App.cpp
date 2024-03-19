@@ -13,6 +13,10 @@
 
 #include <memory>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #pragma comment (lib,"Gdiplus.lib")
 
 GDIPlusManager gdipm;
@@ -75,6 +79,14 @@ App::App()
 			box->SetId(id++);
 		}
 	}
+	
+	Assimp::Importer imp;
+	const aiScene* model = imp.ReadFile(
+		"Models\\suzanne.obj",
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate
+	);
+
 }
 
 App::~App()
