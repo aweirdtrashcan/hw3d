@@ -32,8 +32,7 @@ Suzanne::Suzanne(Graphics* gfx,
 			DirectX::XMFLOAT3 n;
 		};
 
-		std::vector<Vertex> vertices;
-		vertices.reserve(mesh->mNumVertices);
+		std::vector<Vertex> vertices(mesh->mNumVertices);
 		
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
@@ -41,27 +40,51 @@ Suzanne::Suzanne(Graphics* gfx,
 			vertex.pos = *(DirectX::XMFLOAT3*)&mesh->mVertices[i];
 			vertex.n = *(DirectX::XMFLOAT3*)&mesh->mNormals[i];
 
-			vertices.push_back(vertex);
+			vertices[i] = vertex;
 		}
 
-		std::vector<unsigned int> indices;
-		indices.reserve(mesh->mNumFaces * 3);
+		std::vector<unsigned short> indices(mesh->mNumFaces * 3);
 
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 		{
 			const aiFace& face = mesh->mFaces[i];
-			indices.push_back(face.mIndices[0]);
-			indices.push_back(face.mIndices[1]);
-			indices.push_back(face.mIndices[2]);
+			indices[i * 3 + 0] = face.mIndices[0];
+			indices[i * 3 + 1] = face.mIndices[1];
+			indices[i * 3 + 2] = face.mIndices[2];
 		}
 
 		AddStaticBind(std::make_unique<VertexBuffer>(gfx, vertices));
-		AddStaticBind(std::make_unique<IndexBuffer>(gfx, indices));
+		AddStaticIndexBuffer(std::make_unique<IndexBuffer>(gfx, indices));
 
-		std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, "PhongVS.cso");
+		std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVS.cso");
 		Microsoft::WRL::ComPtr<ID3DBlob> vBlob = vShader->GetBytecode();
 		AddStaticBind(std::move(vShader));
 
-		AddStaticBind(std::make_unique<PixelShader>(gfx, "PhongPS.cso"));
+		AddStaticBind(std::make_unique<PixelShader>(gfx, L"PhongPS.cso"));
+
+		const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
+		{
+			{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+			{ "Normal",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		};
+
+		AddStaticBind(std::make_unique<InputLayout>(gfx, ied, vBlob));
+
+		AddStaticBind(std::make_unique<Topology>(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 	}
+	else
+	{
+		SetIndexFromStatic();
+	}
+
+	AddBind(std::make_unique<TransformCbuf>(gfx, *this));
+
+	materialConstants.albedoColor = { 1.0f, 1.0f, 1.0f };
+
+	AddBind(std::make_unique<PixelConstantBuffer<PSMaterialConstant>>(gfx, materialConstants, 1));
+	
+	DirectX::XMStoreFloat3x3(
+		&mt,
+		DirectX::XMMatrixIdentity()
+	);
 }

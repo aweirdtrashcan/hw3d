@@ -3,6 +3,7 @@
 #include "Pyramid.h"
 #include "Sheet.h"
 #include "SkinnedBox.h"
+#include "Suzanne.h"
 
 #include "GDIPlusManager.h"
 #include "Surface.h"
@@ -40,6 +41,11 @@ App::App()
 					gfx, rng, adist, ddist,
 					odist, rdist, bdist, color
 				);
+			case 1:
+				return std::make_unique<Suzanne>(
+					gfx, rng, adist, ddist,
+					odist, rdist, bdist
+				);
 			default:
 				DebugBreak();
 				return nullptr;
@@ -56,7 +62,7 @@ App::App()
 		std::uniform_real_distribution<float> cdist{ 0.0f, 1.0f };
 		std::uniform_int_distribution<int> latdist{ 5, 20 };
 		std::uniform_int_distribution<int> longdist{ 10, 40 };
-		std::uniform_int_distribution<int> typedist{ 0, 0 };
+		std::uniform_int_distribution<int> typedist{ 0, 1 };
 	};
 
 	Factory f( &wnd.Gfx() );
@@ -79,14 +85,6 @@ App::App()
 			box->SetId(id++);
 		}
 	}
-	
-	Assimp::Importer imp;
-	const aiScene* model = imp.ReadFile(
-		"Models\\suzanne.obj",
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_Triangulate
-	);
-
 }
 
 App::~App()
