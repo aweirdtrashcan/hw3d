@@ -14,16 +14,7 @@ Box::Box(Graphics* gfx,
 	std::uniform_real_distribution<float>& bdist,
 	DirectX::XMFLOAT3 material)
 	:
-	r(rdist(rng)),
-	droll(ddist(rng)),
-	dpitch(ddist(rng)),
-	dyaw(ddist(rng)),
-	dphi(odist(rng)),
-	dtheta(odist(rng)),
-	dchi(odist(rng)),
-	chi(adist(rng)),
-	theta(adist(rng)),
-	phi(adist(rng))
+	TestObject(gfx, rng, adist, ddist, odist, rdist, bdist)
 {
 	namespace dx = DirectX;
 
@@ -73,35 +64,6 @@ Box::Box(Graphics* gfx,
 		&mt,
 		dx::XMMatrixScaling(1.0f, 1.0f, bdist(rng))
 	);
-}
-
-template<typename T>
-T wrap_angle(T angle)
-{
-	// I know this is criminal
-	if (angle >= DirectX::XM_PI)
-		angle = -DirectX::XM_PI;
-
-	return angle;
-}
-
-void Box::Update(float dt) noexcept
-{
-	roll = wrap_angle(roll + droll * dt);
-	pitch = wrap_angle(pitch + dpitch * dt);
-	yaw = wrap_angle(yaw + dyaw * dt);
-	theta = wrap_angle(theta + dtheta * dt);
-	phi = wrap_angle(phi + dphi * dt);
-	chi = wrap_angle(chi + dchi * dt);
-}
-
-DirectX::XMMATRIX Box::GetTransformXM() const noexcept
-{
-	namespace dx = DirectX;
-	return dx::XMLoadFloat3x3(&mt) *
-		dx::XMMatrixRotationRollPitchYaw(pitch, yaw, roll) *
-		dx::XMMatrixTranslation(r, 0.0f, 0.0f) *
-		dx::XMMatrixRotationRollPitchYaw(theta, phi, chi);
 }
 
 bool Box::SpawnControlWindow(Graphics* gfx) noexcept
