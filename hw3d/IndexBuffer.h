@@ -9,7 +9,7 @@
 class IndexBuffer : public Bindable
 {
 public:
-	IndexBuffer(Graphics* pGfx, const std::vector<unsigned short>& indices);
+	IndexBuffer(Graphics* pGfx, const std::vector<unsigned int>& indices);
 	virtual ~IndexBuffer() = default;
 	virtual void Bind(Graphics* pGfx) noexcept override;
 	UINT GetCount() const noexcept { return count; }

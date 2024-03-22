@@ -17,19 +17,12 @@ public:
 	int Go();
 private:
 	void DoFrame();
-	__forceinline void SpawnImguiWindow();
-	__forceinline void SpawnBoxWindowControl();
+	void SpawnImguiWindow();
 private:
 	ImguiManager imgui;
 	Window wnd;
 	ChiliTimer timer;
-	std::vector<std::unique_ptr<Drawable>> drawables;
-	static constexpr unsigned int nDrawables = 100;
-	float speedFactor = 1.0f;
-	char* buffer = nullptr;
 	Camera camera;
 	PointLight light;
-	std::set<int> boxIds;
-	std::vector<Box*> boxes;
-	int selectedBoxIndex = -1;
+	class Model* model = nullptr;
 };

@@ -42,18 +42,18 @@ public:
 			}
 		}
 
-		std::vector<unsigned short> indices;
+		std::vector<unsigned int> indices;
 		indices.reserve(sq(divisions_x * divisions_y) * 6);
 		{
 			const auto vxy2i = [nVertices_x](size_t x, size_t y)
 				{
-					return (unsigned short)(y * nVertices_x + x);
+					return (unsigned int)(y * nVertices_x + x);
 				};
 			for (size_t y = 0; y < divisions_y; y++)
 			{
 				for (size_t x = 0; x < divisions_x; x++)
 				{
-					const std::array<unsigned short, 4> indexArray =
+					const std::array<unsigned int, 4> indexArray =
 					{ vxy2i(x,y),vxy2i(x + 1,y),vxy2i(x,y + 1),vxy2i(x + 1,y + 1) };
 					indices.push_back(indexArray[0]);
 					indices.push_back(indexArray[2]);

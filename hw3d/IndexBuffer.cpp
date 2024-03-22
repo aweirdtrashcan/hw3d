@@ -4,15 +4,15 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 
-IndexBuffer::IndexBuffer(Graphics* pGfx, const std::vector<unsigned short>& indices)
+IndexBuffer::IndexBuffer(Graphics* pGfx, const std::vector<unsigned int>& indices)
 	:
 	count((UINT)indices.size())
 {
 	INFOMAN(pGfx);
 
 	D3D11_BUFFER_DESC desc = {};
-	desc.ByteWidth = static_cast<UINT>(count * sizeof(unsigned short));
-	desc.StructureByteStride = sizeof(unsigned short);
+	desc.ByteWidth = static_cast<UINT>(count * sizeof(unsigned int));
+	desc.StructureByteStride = sizeof(unsigned int);
 	desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	desc.Usage = D3D11_USAGE_DEFAULT;
 
@@ -24,5 +24,5 @@ IndexBuffer::IndexBuffer(Graphics* pGfx, const std::vector<unsigned short>& indi
 
 void IndexBuffer::Bind(Graphics* pGfx) noexcept
 {
-	GetContext(pGfx)->IASetIndexBuffer(buffer.Get(), DXGI_FORMAT_R16_UINT, 0);
+	GetContext(pGfx)->IASetIndexBuffer(buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 }

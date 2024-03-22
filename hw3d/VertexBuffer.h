@@ -4,6 +4,8 @@
 #include "Graphics.h"
 #include "DxgiInfoManager.h"
 
+#include "Vertex.h"
+
 class VertexBuffer : public Bindable
 {
 public:
@@ -22,6 +24,24 @@ public:
 		
 		D3D11_SUBRESOURCE_DATA srd = {};
 		srd.pSysMem = vertices.data();
+
+		GFX_THROW_INFO(GetDevice(pGfx)->CreateBuffer(&desc, &srd, &buffer));
+	}
+
+	VertexBuffer(Graphics* pGfx, const hw3dexp::VertexBuffer& vbuf)
+		:
+		stride((UINT)vbuf.GetLayout().Size())
+	{
+		INFOMAN(pGfx);
+
+		D3D11_BUFFER_DESC desc = {};
+		desc.ByteWidth = (UINT)vbuf.SizeBytes();
+		desc.StructureByteStride = stride;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+		desc.BindFlags = D3D10_BIND_VERTEX_BUFFER;
+
+		D3D11_SUBRESOURCE_DATA srd = {};
+		srd.pSysMem = vbuf.GetData();
 
 		GFX_THROW_INFO(GetDevice(pGfx)->CreateBuffer(&desc, &srd, &buffer));
 	}

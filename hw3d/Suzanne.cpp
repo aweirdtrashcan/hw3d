@@ -6,6 +6,8 @@
 
 #include "BindableBase.h"
 
+#include "Vertex.h"
+
 Suzanne::Suzanne(Graphics* gfx,
 	std::mt19937& rng, 
 	std::uniform_real_distribution<float>& adist, 
@@ -26,24 +28,19 @@ Suzanne::Suzanne(Graphics* gfx,
 
 		const aiMesh* mesh = scene->mMeshes[0];
 
-		struct Vertex
-		{
-			DirectX::XMFLOAT3 pos;
-			DirectX::XMFLOAT3 n;
-		};
-
-		std::vector<Vertex> vertices(mesh->mNumVertices);
+		hw3dexp::VertexBuffer vb(
+			std::move(hw3dexp::VertexLayout()
+				.Append(hw3dexp::VertexLayout::Position3D)
+				.Append(hw3dexp::VertexLayout::Normal))
+		);
 		
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
-			Vertex vertex;
-			vertex.pos = *(DirectX::XMFLOAT3*)&mesh->mVertices[i];
-			vertex.n = *(DirectX::XMFLOAT3*)&mesh->mNormals[i];
-
-			vertices[i] = vertex;
+			using f3 = DirectX::XMFLOAT3*;
+			vb.EmplaceBack(*(f3)&mesh->mVertices[i], *(f3)&mesh->mNormals[i]);
 		}
 
-		std::vector<unsigned short> indices(mesh->mNumFaces * 3);
+		std::vector<unsigned int> indices(mesh->mNumFaces * 3);
 
 		for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 		{
@@ -53,7 +50,7 @@ Suzanne::Suzanne(Graphics* gfx,
 			indices[i * 3 + 2] = face.mIndices[2];
 		}
 
-		AddStaticBind(std::make_unique<VertexBuffer>(gfx, vertices));
+		AddStaticBind(std::make_unique<VertexBuffer>(gfx, vb));
 		AddStaticIndexBuffer(std::make_unique<IndexBuffer>(gfx, indices));
 
 		std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVS.cso");
@@ -62,13 +59,7 @@ Suzanne::Suzanne(Graphics* gfx,
 
 		AddStaticBind(std::make_unique<PixelShader>(gfx, L"PhongPS.cso"));
 
-		const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
-		{
-			{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-			{ "Normal",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		};
-
-		AddStaticBind(std::make_unique<InputLayout>(gfx, ied, vBlob));
+		AddStaticBind(std::make_unique<InputLayout>(gfx, vb.GetLayout().GetD3DLayout(), vBlob));
 
 		AddStaticBind(std::make_unique<Topology>(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
 	}
