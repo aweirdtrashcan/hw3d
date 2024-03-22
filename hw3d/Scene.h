@@ -8,6 +8,17 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+struct TransformParameters
+{
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+
+	float roll = 0.0f;
+	float pitch = 0.0f;
+	float yaw = 0.0f;
+};
+
 class Mesh : public DrawableBase<Mesh>
 {
 public:
@@ -31,11 +42,14 @@ public:
 	int GetId() const noexcept { return id; }
 private:
 	void AddChildren(std::unique_ptr<Node> children) noexcept(!IS_DEBUG);
+	void SetAppliedTransform(DirectX::FXMMATRIX transform) noexcept(!IS_DEBUG);
 private:
 	std::string name;
 	std::vector<Mesh*> meshes;
 	std::vector<std::unique_ptr<Node>> childNodes;
 	DirectX::XMFLOAT4X4 transform;
+	DirectX::XMFLOAT4X4 appliedTransform;
+	TransformParameters transformParameters;
 	int id;
 };
 
