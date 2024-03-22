@@ -18,11 +18,12 @@ public:
 private:
 	void DoFrame();
 	void SpawnImguiWindow();
+	void SpawnModelWindow();
 private:
 	ImguiManager imgui;
 	Window wnd;
 	ChiliTimer timer;
 	Camera camera;
 	PointLight light;
-	class Model* model = nullptr;
+	class Scene* model = nullptr;
 };

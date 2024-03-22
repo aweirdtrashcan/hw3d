@@ -18,7 +18,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "Model.h"
+#include "Scene.h"
 
 #pragma comment (lib,"Gdiplus.lib")
 
@@ -26,12 +26,12 @@ GDIPlusManager gdipm;
 
 App::App()
 	:
-	wnd( 1280,720,"The Donkey Fart Box" ),
+	wnd( 1920 - 100,1080 - 100,"The Donkey Fart Box" ),
 	light(&wnd.Gfx(), camera)
 {
 	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveFovLH(45.f, (float)wnd.GetWidth() / (float)wnd.GetHeight(), 0.1f, 10000.f));
 
-	model = new Model(&wnd.Gfx(), "Models\\sponza.obj");
+	model = new Scene(&wnd.Gfx(), "Models\\nanosuit.obj");
 }
 
 App::~App()
@@ -69,10 +69,12 @@ void App::DoFrame()
 	wnd.Gfx().BeginFrame( s, c, 1.0f );
 
 	model->Draw(&wnd.Gfx());
+	model->ShowWindow("Sponza");
 
 	light.Draw(&wnd.Gfx());
 	light.SpawnControlWindow();
 	SpawnImguiWindow();
+	SpawnModelWindow();
 	camera.SpawnControlWindow();
 
 	wnd.Gfx().EndFrame();
@@ -87,4 +89,9 @@ void App::SpawnImguiWindow()
 		ImGui::Checkbox("VSync", &wnd.Gfx().GetIsVsyncEnabled());
 	}
 	ImGui::End();
+}
+
+void App::SpawnModelWindow()
+{
+
 }
