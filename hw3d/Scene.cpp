@@ -3,6 +3,12 @@
 #include "imgui.h"
 #include <unordered_map>
 
+#include "Log.h"
+
+#ifdef _DEBUG
+#include <iostream>
+#endif
+
 class SceneWindow
 {
 public:
@@ -161,10 +167,16 @@ Scene::Scene(Graphics* gfx, const std::string& modelPath)
     showWindow(std::make_unique<SceneWindow>())
 {
     Assimp::Importer imp;
+ 
+    Log::Debug("Loading model " + modelPath);
+
     const aiScene* scene = imp.ReadFile(
         modelPath,
-        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices
+        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
+        aiProcess_ConvertToLeftHanded | aiProcess_GenNormals
     );
+
+    Log::Debug("The model " + modelPath + " was loaded!");
 
     for (unsigned int i = 0; i < scene->mNumMeshes; i++)
     {

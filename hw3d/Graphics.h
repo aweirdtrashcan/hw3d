@@ -66,6 +66,9 @@ public:
 	inline bool IsImguiEnabled() const { return imguiEnabled; }
 	void DrawIndexed(UINT indexCount);
 	inline bool& GetIsVsyncEnabled() noexcept { return bEnableVSync; }
+	void SetPaused(bool bPaused) noexcept { this->bPaused = bPaused; }
+	bool GetIsPaused() const noexcept { return bPaused; }
+	void OnResize(UINT width, UINT height) noexcept(!IS_DEBUG);
 private:
 #ifdef _DEBUG
 	DxgiInfoManager infoManager;
@@ -85,4 +88,5 @@ private:
 	DirectX::XMFLOAT4X4 view;
 	PresentFuncPtr presentFunctions[2];
 	bool bEnableVSync = true;
+	bool bPaused = false;
 };

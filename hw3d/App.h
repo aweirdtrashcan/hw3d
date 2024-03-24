@@ -7,6 +7,8 @@
 #include "ImguiManager.h"
 #include "Camera.h"
 #include "PointLight.h"
+#include "Log.h"
+#include "Mouse.h"
 
 class App
 {
@@ -19,11 +21,14 @@ private:
 	void DoFrame();
 	void SpawnImguiWindow();
 	void SpawnModelWindow();
+	void ShowRawDeltaWindow();
 private:
+	Log log;
 	ImguiManager imgui;
 	Window wnd;
 	ChiliTimer timer;
 	Camera camera;
 	PointLight light;
 	class Scene* model = nullptr;
+	Mouse::RawDelta rawDelta{};
 };

@@ -72,6 +72,22 @@ void Mouse::Flush() noexcept
 	buffer = std::queue<Event>();
 }
 
+void Mouse::OnRawDelta(long deltaX, long deltaY) noexcept
+{
+	rawDelta.push({ deltaX, deltaY });
+	TrimRawDelta();
+}
+
+std::optional<Mouse::RawDelta> Mouse::GetRawDelta() noexcept
+{
+	if (rawDelta.empty())
+		return std::nullopt;
+
+	RawDelta d = rawDelta.front();
+	rawDelta.pop();
+	return d;
+}
+
 void Mouse::OnMouseMove( int newx,int newy ) noexcept
 {
 	x = newx;
@@ -150,6 +166,14 @@ void Mouse::TrimBuffer() noexcept
 			OutputDebugStringA("Failed to pop from Mouse buffer\n");
 			break;
 		}
+	}
+}
+
+void Mouse::TrimRawDelta() noexcept
+{
+	while (rawDelta.size() > 16)
+	{
+		rawDelta.pop();
 	}
 }
 

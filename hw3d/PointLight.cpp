@@ -29,8 +29,8 @@ void PointLight::SpawnControlWindow() noexcept
 		ImGui::SliderFloat("Diffuse Intensity", &cbCpu.diffuseIntensity, 0.0f, 1.0f);
 		ImGui::Text("Attenuation");
 		ImGui::SliderFloat("Constant Attenuation", &cbCpu.attConst, 0.0f, 10.0f);
-		ImGui::SliderFloat("Linear Attenuation", &cbCpu.attLin, 0.0f, 1.0f);
-		ImGui::SliderFloat("Quadratic Attenuation", &cbCpu.attQuad, 0.0f, 0.1f);
+		ImGui::SliderFloat("Linear Attenuation", &cbCpu.attLin, 0.0f, 0.05f);
+		ImGui::SliderFloat("Quadratic Attenuation", &cbCpu.attQuad, 0.0f, 0.001f);
 	}
 	ImGui::End();
 }

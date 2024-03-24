@@ -3,10 +3,8 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 #include <d3dcompiler.h>
-#include <sstream>
-#include <sstream>
 
-VertexShader::VertexShader(Graphics* pGfx, const wchar_t* shaderPath)
+VertexShader::VertexShader(Graphics* pGfx, const std::wstring& shaderPath)
 {
 	INFOMAN(pGfx);
 
@@ -16,7 +14,7 @@ VertexShader::VertexShader(Graphics* pGfx, const wchar_t* shaderPath)
 	if (FAILED(D3DReadFileToBlob(wss.str().c_str(), &shaderBlob)))
 	{
 		std::stringstream ss;
-		ss << "Failed to load Vertex Shader " << shaderPath;
+		ss << "Failed to load Vertex Shader " << std::string(shaderPath.begin(), shaderPath.end());
 		throw Graphics::InfoException(__LINE__ -3, __FILE__, { ss.str()});
 	}
 

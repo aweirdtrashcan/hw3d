@@ -78,9 +78,18 @@ public:
 	void SetTitle( const std::string& title );
 	static std::optional<int> ProcessMessages();
 	Graphics& Gfx();
+	Graphics* GfxPtr();
+	void EnableCursor() noexcept;
+	void DisableCursor() noexcept;
 	int GetWidth() const { return width; }
 	int GetHeight() const { return height; }
 private:
+	void ConfineCursor() noexcept;
+	void FreeCursor() noexcept;
+	void HideCursor() noexcept;
+	void ShowCursor() noexcept;
+	void EnableImGuiMouse() noexcept;
+	void DisableImGuiMouse() noexcept;
 	static LRESULT CALLBACK HandleMsgSetup( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;
 	static LRESULT CALLBACK HandleMsgThunk( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;
 	LRESULT HandleMsg( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noexcept;
@@ -88,6 +97,7 @@ public:
 	Keyboard kbd;
 	Mouse mouse;
 private:
+	bool cursorEnabled = false;
 	int width;
 	int height;
 	HWND hWnd;

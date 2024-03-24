@@ -38,7 +38,7 @@ Graphics::Graphics( HWND hWnd, UINT windowWidth, UINT windowHeight )
 	sd.BufferDesc.Width = windowWidth;
 	sd.BufferDesc.Height = windowHeight;
 	sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	sd.BufferDesc.RefreshRate.Numerator = 0;
+	sd.BufferDesc.RefreshRate.Numerator = 1;
 	sd.BufferDesc.RefreshRate.Denominator = 0;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
@@ -187,6 +187,10 @@ void Graphics::SetView(DirectX::FXMMATRIX view) noexcept
 void Graphics::DrawIndexed(UINT indexCount)
 {
 	GFX_THROW_INFO_ONLY(pContext->DrawIndexed(indexCount, 0, 0));
+}
+
+void Graphics::OnResize(UINT width, UINT height) noexcept(!IS_DEBUG)
+{
 }
 
 Graphics::HrException::HrException(int line, const char* file, HRESULT hr, const std::vector<std::string>& infos) noexcept

@@ -19,6 +19,8 @@
  *	along with The Chili DirectX Framework.  If not, see <http://www.gnu.org/licenses/>.  *
  ******************************************************************************************/
 #pragma once
+
+#include <optional>
 #include <queue>
 
 class Mouse
@@ -93,6 +95,11 @@ public:
 			return rightIsPressed;
 		}
 	};
+	struct RawDelta
+	{
+		int x;
+		int y;
+	};
 public:
 	Mouse() = default;
 	Mouse( const Mouse& ) = delete;
@@ -109,6 +116,8 @@ public:
 		return buffer.empty();
 	}
 	void Flush() noexcept;
+	void OnRawDelta(long deltaX, long deltaY) noexcept;
+	std::optional<RawDelta> GetRawDelta() noexcept;
 private:
 	void OnMouseMove( int x,int y ) noexcept;
 	void OnMouseLeave() noexcept;
@@ -120,6 +129,7 @@ private:
 	void OnWheelUp( int x,int y ) noexcept;
 	void OnWheelDown( int x,int y ) noexcept;
 	void TrimBuffer() noexcept;
+	void TrimRawDelta() noexcept;
 	void OnWheelDelta( int x,int y,int delta ) noexcept;
 private:
 	static constexpr unsigned int bufferSize = 16u;
@@ -130,4 +140,5 @@ private:
 	bool isInWindow = false;
 	int wheelDeltaCarry = 0;
 	std::queue<Event> buffer;
+	std::queue<RawDelta> rawDelta;
 };

@@ -3,9 +3,8 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 #include <d3dcompiler.h>
-#include <sstream>
 
-PixelShader::PixelShader(Graphics* pGfx, const wchar_t* shaderPath)
+PixelShader::PixelShader(Graphics* pGfx, const std::wstring& shaderPath)
 {
 	INFOMAN(pGfx);
 
@@ -18,7 +17,7 @@ PixelShader::PixelShader(Graphics* pGfx, const wchar_t* shaderPath)
 	if (FAILED(D3DReadFileToBlob(wss.str().c_str(), &blob)))
 	{
 		std::stringstream ss;
-		ss << "Failed to load Pixel Shader " << shaderPath;
+		ss << "Failed to load Pixel Shader " << std::string(shaderPath.begin(), shaderPath.end());
 		throw Graphics::InfoException(__LINE__ - 3, __FILE__, { ss.str() });
 	}
 
