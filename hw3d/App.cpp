@@ -29,12 +29,9 @@ App::App()
 	wnd( 1600,900,"The Donkey Fart Box" ),
 	light(wnd.GfxPtr(), camera)
 {
-	wnd.DisableCursor();
-
 	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveFovLH(45.f, (float)wnd.GetWidth() / (float)wnd.GetHeight(), 0.1f, 10000.f));
 
 	model = new Scene(wnd.GfxPtr(), "Models\\sponza.obj");
-
 }
 
 App::~App()
@@ -64,14 +61,16 @@ int App::Go()
 
 void App::DoFrame()
 {
-	if (wnd.kbd.KeyIsPressed('S') || wnd.kbd.KeyIsPressed('s'))
-	{
-		wnd.EnableCursor();
-	}
-
 	if (wnd.kbd.KeyIsPressed('h') || wnd.kbd.KeyIsPressed('H'))
 	{
-		wnd.DisableCursor();
+		if (wnd.CursorEnabled())
+		{
+			wnd.DisableCursor();
+		}
+		else
+		{
+			wnd.EnableCursor();
+		}
 	}
 
 	if (wnd.Gfx().GetIsPaused()) return;

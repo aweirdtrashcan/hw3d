@@ -83,6 +83,7 @@ public:
 	void DisableCursor() noexcept;
 	int GetWidth() const { return width; }
 	int GetHeight() const { return height; }
+	bool CursorEnabled() const { return cursorEnabled; }
 private:
 	void ConfineCursor() noexcept;
 	void FreeCursor() noexcept;
@@ -97,9 +98,10 @@ public:
 	Keyboard kbd;
 	Mouse mouse;
 private:
-	bool cursorEnabled = false;
+	bool cursorEnabled = true;
 	int width;
 	int height;
 	HWND hWnd;
 	std::unique_ptr<Graphics> pGfx;
+	RAWINPUT rawInput{};
 };

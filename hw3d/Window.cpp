@@ -325,38 +325,21 @@ LRESULT Window::HandleMsg( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noex
 	/*********** RAW MOUSE MESSAGES ***************/
 	case WM_INPUT:
 	{
-		UINT size = 0;
-		// first get the size of the input data
-		if (GetRawInputData(
-			(HRAWINPUT)lParam,
-			RID_INPUT,
-			nullptr,
-			&size,
-			sizeof(RAWINPUTHEADER)
-		) == -1) {
-			auto e = CHWND_LAST_EXCEPT();
-
-			Log::Debug(e.GetErrorDescription());
-			break;
-		}
-
-		RAWINPUT* rawInput = (RAWINPUT*)alloca(size);
-		memset(rawInput, 0, size);
-
+		UINT size = sizeof(rawInput);
 		if (GetRawInputData(
 			reinterpret_cast<HRAWINPUT>(lParam),
 			RID_INPUT,
-			rawInput,
+			&rawInput,
 			&size,
 			sizeof(RAWINPUTHEADER)
 		) != size) {
 			break;
 		}
 
-		if (rawInput->header.dwType = RIM_TYPEMOUSE &&
-			rawInput->data.mouse.lLastX != 0 || rawInput->data.mouse.lLastY != 0)
+		if (rawInput.header.dwType = RIM_TYPEMOUSE &&
+			rawInput.data.mouse.lLastX != 0 || rawInput.data.mouse.lLastY != 0)
 		{
-			mouse.OnRawDelta(rawInput->data.mouse.lLastX, rawInput->data.mouse.lLastY);
+			mouse.OnRawDelta(rawInput.data.mouse.lLastX, rawInput.data.mouse.lLastY);
 		}
 		break;
 	}
