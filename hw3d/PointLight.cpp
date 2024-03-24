@@ -52,8 +52,8 @@ void PointLight::Bind(Graphics* gfx) const noexcept
 	cbGpu.Update(gfx, cbCpu);
 	cbGpu.Bind(gfx);
 
-	const DirectX::XMVECTOR& cameraPos = camera.GetPosition();
-	cbCpu.eyePos.x = DirectX::XMVectorGetX(cameraPos);
-	cbCpu.eyePos.y = DirectX::XMVectorGetY(cameraPos);
-	cbCpu.eyePos.z = DirectX::XMVectorGetZ(cameraPos);
+	const DirectX::XMFLOAT3& cameraPos = camera.GetPosition();
+	cbCpu.eyePos.x = cameraPos.x;
+	cbCpu.eyePos.y = cameraPos.y;
+	cbCpu.eyePos.z = cameraPos.z;
 }

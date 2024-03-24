@@ -61,17 +61,9 @@ int App::Go()
 
 void App::DoFrame()
 {
-	if (wnd.kbd.KeyIsPressed('h') || wnd.kbd.KeyIsPressed('H'))
-	{
-		if (wnd.CursorEnabled())
-		{
-			wnd.DisableCursor();
-		}
-		else
-		{
-			wnd.EnableCursor();
-		}
-	}
+	const float dt = timer.Mark();
+
+	ProcessKeys(dt);
 
 	if (wnd.Gfx().GetIsPaused()) return;
 
@@ -90,9 +82,7 @@ void App::DoFrame()
 		model->ShowWindow("Sponza");
 		light.SpawnControlWindow();
 		SpawnImguiWindow();
-		SpawnModelWindow();
 		camera.SpawnControlWindow();
-		ShowRawDeltaWindow();
 	}
 
 	wnd.Gfx().EndFrame();
@@ -109,21 +99,70 @@ void App::SpawnImguiWindow()
 	ImGui::End();
 }
 
-void App::SpawnModelWindow()
+void App::ProcessKeys(float dt)
 {
-
-}
-
-void App::ShowRawDeltaWindow()
-{
-	while (std::optional<Mouse::RawDelta> d = wnd.mouse.GetRawDelta())
+	while (true)
 	{
-		rawDelta.x += d.value().x;
-		rawDelta.y += d.value().y;
+		const float dt = 1000.f / ImGui::GetIO().Framerate;
+		Keyboard::Event e = wnd.kbd.ReadKey();
+		if (!e.IsValid()) break;
+
+		if (e.IsPress()) break;
+
+		switch (e.GetCode())
+		{
+		case 'H':
+		{
+			if (wnd.CursorEnabled())
+			{
+				wnd.DisableCursor();
+			}
+			else
+			{
+				wnd.EnableCursor();
+			}
+		} break;
+		case VK_F1:
+		{
+			showDemoWindow = !showDemoWindow;
+			break;
+		}
+		}
 	}
-	if (ImGui::Begin("Raw Delta"))
+
+	if (!wnd.CursorEnabled())
 	{
-		ImGui::Text("%d, %d", rawDelta.x, rawDelta.y);
+		if (wnd.kbd.KeyIsPressed('W'))
+		{
+			camera.Translate({ 0.0f, 0.0f, dt });
+		}
+		if (wnd.kbd.KeyIsPressed('S'))
+		{
+			camera.Translate({ 0.0f, 0.0f, -dt });
+		}
+		if (wnd.kbd.KeyIsPressed('D'))
+		{
+			camera.Translate({ dt, 0.0f, 0.0f });
+		}
+		if (wnd.kbd.KeyIsPressed('A'))
+		{
+			camera.Translate({ -dt, 0.0f, 0.0f });
+		}
+		if (wnd.kbd.KeyIsPressed(VK_SPACE))
+		{
+			camera.Translate({ 0.0f, dt, 0.0f });
+		}
+		if (wnd.kbd.KeyIsPressed(VK_CONTROL))
+		{
+			camera.Translate({ 0.0f, -dt, 0.0f });
+		}
+
+		while (std::optional<Mouse::RawDelta> d = wnd.mouse.GetRawDelta())
+		{
+			if (d.has_value())
+			{
+				camera.Rotate(d.value().x, d.value().y);
+			}
+		}
 	}
-	ImGui::End();
 }

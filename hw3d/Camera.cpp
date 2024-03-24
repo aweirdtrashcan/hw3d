@@ -1,25 +1,24 @@
 #include "Camera.h"
 
 #include "imgui.h"
+#include <algorithm>
+
+Camera::Camera() noexcept
+{
+	Reset();
+}
 
 DirectX::XMMATRIX Camera::GetMatrix() const noexcept
 {
-	
-	DirectX::XMVECTOR pos = GetPosition();
-	DirectX::XMVECTOR target = DirectX::XMVectorZero();
-	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	DirectX::XMMATRIX cameraMat = DirectX::XMMatrixLookAtLH(pos, target, up) *
-		DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
-	return cameraMat;
-}
+	DirectX::XMVECTOR forwardBaseVector = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	DirectX::XMVECTOR lookVector = DirectX::XMVector3Transform(
+		forwardBaseVector,
+		DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0)
+	);
 
-DirectX::XMVECTOR Camera::GetPosition() const noexcept
-{
-	float x = r * cosf(theta) * sinf(phi);
-	float y = r * cosf(phi);
-	float z = r * sinf(theta) * sinf(phi);
-
-	return DirectX::XMVectorSet(x, y, z, 1.0f);
+	DirectX::XMVECTOR pos = DirectX::XMLoadFloat3(&this->pos);
+	DirectX::XMVECTOR target = DirectX::XMVectorAdd(pos, lookVector);
+	return DirectX::XMMatrixLookAtLH(pos, target, DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 }
 
 void Camera::SpawnControlWindow() noexcept
@@ -27,13 +26,12 @@ void Camera::SpawnControlWindow() noexcept
 	if (ImGui::Begin("Camera"))
 	{
 		ImGui::Text("Position");
-		ImGui::SliderFloat("R", &r, 1.0f, 200.f, "%.1f");
-		ImGui::SliderAngle("Theta", &theta, 0.0f, 360.f);
-		ImGui::SliderAngle("Phi", &phi, 1.0f, 179.f);
+		ImGui::SliderFloat("X", &pos.x, -80.f, 80.f, "%.1f");
+		ImGui::SliderFloat("Y", &pos.y, -80.f, 80.f, "%.1f");
+		ImGui::SliderFloat("Z", &pos.z, -80.f, 80.f, "%.1f");
 		ImGui::Text("Orientation");
-		ImGui::SliderAngle("Pitch", &pitch, 0.0f, 180.f);
-		ImGui::SliderAngle("Roll", &roll, 0.0f, 180.f);
-		ImGui::SliderAngle("Yaw", &yaw, 0.0f, 180.f);
+		ImGui::SliderAngle("Pitch", &pitch, -90.f, 90.f);
+		ImGui::SliderAngle("Yaw", &yaw, -90.f, 90.f);
 		if (ImGui::Button("Reset"))
 		{
 			Reset();
@@ -44,10 +42,33 @@ void Camera::SpawnControlWindow() noexcept
 
 void Camera::Reset() noexcept
 {
-	r = 20.f;
-	theta = DirectX::XM_PIDIV2;
-	phi = DirectX::XM_PIDIV2;
+	pos.x = 0.0f;
+	pos.y = 7.5f;
+	pos.z = -18.f;
 	pitch = 0.0f;
 	yaw = 0.0f;
-	roll = 0.0f;
+}
+
+void Camera::Rotate(float dx, float dy) noexcept
+{
+	yaw = (yaw + dx * rotationSpeed);
+	pitch = std::clamp(pitch + dy * rotationSpeed, -DirectX::XM_PIDIV2 * 0.995f, DirectX::XM_PIDIV2 * 0.995f);
+}
+
+void Camera::Translate(DirectX::XMFLOAT3 translation) noexcept
+{
+	DirectX::XMStoreFloat3(&translation, DirectX::XMVector3Transform(
+		DirectX::XMLoadFloat3(&translation),
+		DirectX::XMMatrixRotationRollPitchYaw(pitch, yaw, 0.0f) *
+		DirectX::XMMatrixScaling(travelSpeed, travelSpeed, travelSpeed)
+	));
+
+	pos.x += translation.x;
+	pos.y += translation.y;
+	pos.z += translation.z;
+}
+
+const DirectX::XMFLOAT3& Camera::GetPosition() const noexcept
+{
+	return pos;
 }

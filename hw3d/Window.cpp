@@ -115,6 +115,8 @@ Window::Window( int width,int height,const char* name )
 	RAWINPUTDEVICE rid = {};
 	rid.usUsagePage = 0x01; // mouse page
 	rid.usUsage = 0x02; // mouse usage
+	rid.dwFlags = 0;
+	rid.hwndTarget = hWnd;
 	if (RegisterRawInputDevices(&rid, 1, sizeof(rid)) == FALSE)
 	{
 		throw CHWND_LAST_EXCEPT();
@@ -336,7 +338,7 @@ LRESULT Window::HandleMsg( HWND hWnd,UINT msg,WPARAM wParam,LPARAM lParam ) noex
 			break;
 		}
 
-		if (rawInput.header.dwType = RIM_TYPEMOUSE &&
+		if (rawInput.header.dwType == RIM_TYPEMOUSE &&
 			rawInput.data.mouse.lLastX != 0 || rawInput.data.mouse.lLastY != 0)
 		{
 			mouse.OnRawDelta(rawInput.data.mouse.lLastX, rawInput.data.mouse.lLastY);

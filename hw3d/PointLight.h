@@ -18,14 +18,14 @@ public:
 private:
 	struct PointLightCBuf
 	{
-		DirectX::XMFLOAT3 lightPos = { 0.0f, 0.0f, 10.0f };
+		DirectX::XMFLOAT3 lightPos = { 0.0f, 100.0f, 10.0f };
 		float diffuseIntensity = 1.0f;
 		DirectX::XMFLOAT3 ambientColor = { 0.1f, 0.1f, 0.1f };
-		float attConst = 0.5f;
+		float attConst = 0.4f;
 		DirectX::XMFLOAT3 lightColor = { 1.0f, 1.0f, 1.0f };
-		float attLin = 0.020f;
+		float attLin = 0.005f;
 		DirectX::XMFLOAT3 eyePos = {};
-		float attQuad = 0.003f;
+		float attQuad = 0.000f;
 	};
 
 	Drawable* mesh;

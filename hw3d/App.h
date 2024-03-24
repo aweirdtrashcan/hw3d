@@ -20,8 +20,7 @@ public:
 private:
 	void DoFrame();
 	void SpawnImguiWindow();
-	void SpawnModelWindow();
-	void ShowRawDeltaWindow();
+	void ProcessKeys(float dt);
 private:
 	Log log;
 	ImguiManager imgui;
@@ -30,5 +29,5 @@ private:
 	Camera camera;
 	PointLight light;
 	class Scene* model = nullptr;
-	Mouse::RawDelta rawDelta{};
+	bool showDemoWindow = false;
 };
