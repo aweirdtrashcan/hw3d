@@ -63,7 +63,8 @@ public:
 	~Scene() noexcept;
 private:
 	std::unique_ptr<Node> ParseNode(const aiNode* node);
-	std::unique_ptr<Mesh> ParseMesh(Graphics* gfx, const aiMesh* mesh);
+	static std::unique_ptr<Mesh> ParseMesh(Graphics* gfx, const aiMesh* mesh);
+	static std::unique_ptr<Mesh> ParseMesh(Graphics* gfx, const aiMesh* mesh, const aiMaterial* const* materials);
 private:
 	std::vector<std::unique_ptr<Mesh>> meshes;
 	std::unique_ptr<Node> rootNode;

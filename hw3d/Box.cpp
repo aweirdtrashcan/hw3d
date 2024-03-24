@@ -82,7 +82,7 @@ bool Box::SpawnControlWindow(Graphics* gfx) noexcept
 		bool fresnelChanged = ImGui::SliderFloat3("Fresnel R0", &materialConstants.fresnelR0.x, 0.0f, 1.0f);
 		bool specIntChanged = ImGui::SliderFloat("Specular Intensity", &materialConstants.specularIntensity, 0.0f, 1.0f);
 		bool specPwrChanged = ImGui::SliderFloat("Specular Power", &materialConstants.specularPower, 0.0f, 1.0f);
-		bool roughChanged = ImGui::SliderFloat("Roughness", &materialConstants.roughness, 0.0f, 1.0f);
+		bool roughChanged = ImGui::SliderFloat("Roughness", &materialConstants.shininess, 0.0f, 1.0f);
 		hasValuesChanged = albedoChanged || fresnelChanged || specIntChanged || specPwrChanged || roughChanged;
 
 		ImGui::Text("Position");

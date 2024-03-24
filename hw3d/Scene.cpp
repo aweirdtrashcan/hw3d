@@ -9,6 +9,8 @@
 #include <iostream>
 #endif
 
+#include "Surface.h"
+
 class SceneWindow
 {
 public:
@@ -180,7 +182,14 @@ Scene::Scene(Graphics* gfx, const std::string& modelPath)
 
     for (unsigned int i = 0; i < scene->mNumMeshes; i++)
     {
-        meshes.push_back(ParseMesh(gfx, scene->mMeshes[i]));
+        if (scene->mNumMaterials > 0)
+        {
+            meshes.push_back(ParseMesh(gfx, scene->mMeshes[i], scene->mMaterials));
+        }
+        else if (scene->mNumMaterials == 0)
+        {
+            meshes.push_back(ParseMesh(gfx, scene->mMeshes[i]));
+        }
     }
 
     rootNode = ParseNode(scene->mRootNode);
@@ -276,6 +285,79 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh)
     material.fresnelR0 = { 0.7f, 0.7f, 0.7f };
 
     bindables.push_back(std::make_unique<PixelConstantBuffer<PSMaterialConstant>>(gfx, material, 1));
+
+    return std::make_unique<Mesh>(gfx, std::move(bindables));
+}
+
+std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const aiMaterial* const* materials)
+{
+    hw3dexp::VertexBuffer vbuf(
+        hw3dexp::VertexLayout()
+        .Append(hw3dexp::VertexLayout::Position3D)
+        .Append(hw3dexp::VertexLayout::Normal)
+        .Append(hw3dexp::VertexLayout::Texture2D)
+    );
+
+    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+    {
+        DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
+        DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
+        const aiVector3D* texCoord3d = &mesh->mTextureCoords[0][i];
+        DirectX::XMFLOAT2 texCoord = { texCoord3d->x, texCoord3d->y };
+
+        vbuf.EmplaceBack(
+            *position,
+            *normal,
+            texCoord
+        );
+    }
+
+    std::vector<unsigned int> indices(mesh->mNumFaces * 3);
+
+    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+    {
+        const aiFace& face = mesh->mFaces[i];
+        indices[i * 3 + 0] = face.mIndices[0];
+        indices[i * 3 + 1] = face.mIndices[1];
+        indices[i * 3 + 2] = face.mIndices[2];
+    }
+
+    std::vector<std::unique_ptr<Bindable>> bindables;
+
+    bindables.push_back(std::make_unique<VertexBuffer>(gfx, vbuf));
+    bindables.push_back(std::make_unique<IndexBuffer>(gfx, indices));
+
+    std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVS.cso");
+    Microsoft::WRL::ComPtr<ID3DBlob> vBlob = vShader->GetBytecode();
+    bindables.push_back(std::move(vShader));
+
+    bindables.push_back(std::make_unique<PixelShader>(gfx, L"PhongPS.cso"));
+
+    bindables.push_back(std::make_unique<InputLayout>(gfx, vbuf.GetLayout().GetD3DLayout(), vBlob));
+
+    PSMaterialConstant psMaterial;
+
+    if (mesh->mMaterialIndex >= 0)
+    {
+        const aiMaterial* material = materials[mesh->mMaterialIndex];
+        aiString texFileName;
+
+        material->GetTexture(aiTextureType_DIFFUSE, 0, &texFileName);
+        
+        if (texFileName.length != 0)
+        {
+            std::stringstream oss;
+            oss << "Models/" << texFileName.C_Str();
+
+            if (!oss.str().ends_with(".tga"))
+            {
+                bindables.push_back(std::make_unique<Texture>(gfx, &Surface::FromFile(oss.str())));
+                bindables.push_back(std::make_unique<Sampler>(gfx));
+            }
+        }
+    }
+
+    bindables.push_back(std::make_unique<PixelConstantBuffer<PSMaterialConstant>>(gfx, psMaterial, 1));
 
     return std::make_unique<Mesh>(gfx, std::move(bindables));
 }

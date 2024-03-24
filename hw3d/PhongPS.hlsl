@@ -16,15 +16,18 @@ cbuffer MaterialCBuf : register(b1)
     float specularIntensity;
     float3 fresnelR0;
     float specularPower;
-    float roughness;
+    float shininess;
 };
+ 
+Texture2D tex;
+SamplerState ss;
 
 // attenuation 1 / (CONSTANT + LINEAR * distance + QUADRATIC * distance * distance)
 
 float3 FresnelEffect(float3 R0, float3 normal, float3 lightVec);
 float Roughness(float3 halfVec, float3 normal, float shininess);
 
-float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal : wvNormal) : SV_Target
+float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal : wvNormal, float2 texCoord: TexCoord) : SV_Target
 {
     float3 lightVec = lightPos - worldPos;
     float distL = length(lightVec);
@@ -34,7 +37,7 @@ float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal
     float3 halfVec = normalize(lightVec + toEye);
     
     float3 reflectCoeff = FresnelEffect(fresnelR0, halfVec, lightVec);
-    float roughCoeff = Roughness(halfVec, wNormal, 1 - roughness);
+    float roughCoeff = Roughness(halfVec, wNormal, shininess);
     
     float att = 1 / (attConst + attLin * distL + attQuad * (distL * distL));
     
@@ -50,7 +53,7 @@ float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal
     specular *= specularIntensity;
     
     float3 specularDiffuse = (diffuse + specular) * lightStrength;
-    return saturate(float4(specularDiffuse + ambient, 1.0f));
+    return float4(specularDiffuse, 1.0f) * tex.Sample(ss, texCoord) + float4(ambient, 1.0f);
 }
 
 float3 FresnelEffect(float3 R0, float3 halfVec, float3 lightVec)

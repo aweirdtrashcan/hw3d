@@ -10,10 +10,11 @@ struct VSOut
     float3 worldPos : Position;
     float3 wNormal : Normal;
     float3 wvNormal : wvNormal;
+    float2 texCoord : TexCoord;
     float4 pos : SV_Position;
 };
     
-VSOut main( float3 pos : Position, float3 normal : Normal )
+VSOut main(float3 pos : Position, float3 normal : Normal, float2 texCoord : TexCoord)
 {
     VSOut vout;
     float4 posf4 = float4(pos, 1.0f);
@@ -21,5 +22,6 @@ VSOut main( float3 pos : Position, float3 normal : Normal )
     vout.wNormal = normalize(mul(normal, (float3x3) model));
     vout.wvNormal = normalize(mul(normal, (float3x3) modelView));
     vout.worldPos = (float3) mul(posf4, model);
+    vout.texCoord = texCoord;
     return vout;
 }
