@@ -161,7 +161,7 @@ void App::ProcessKeys(float dt)
 		{
 			if (d.has_value())
 			{
-				camera.Rotate(d.value().x, d.value().y);
+				camera.Rotate((float)d.value().x, (float)d.value().y);
 			}
 		}
 	}

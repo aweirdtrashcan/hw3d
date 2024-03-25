@@ -10,7 +10,7 @@ class Drawable;
 class PointLight
 {
 public:
-	PointLight(Graphics* gfx, const Camera& camera, float radius = 0.5f);
+	PointLight(Graphics* gfx, const Camera& camera, float radius = 3.0f);
 	void SpawnControlWindow() noexcept;
 	void Reset() noexcept;
 	void Draw(Graphics* gfx) const noexcept(!_DEBUG);
