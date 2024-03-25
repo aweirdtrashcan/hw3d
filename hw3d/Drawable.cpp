@@ -10,6 +10,11 @@ void Drawable::Draw(Graphics* pGfx) const noexcept(!_DEBUG)
         b->Bind(pGfx);
     }
 
+    for (const std::shared_ptr<Bindable>& b : sharedBinds)
+    {
+        b->Bind(pGfx);
+    }
+
     for (const std::unique_ptr<Bindable>& b : GetStaticBinds())
     {
         b->Bind(pGfx);
@@ -25,6 +30,15 @@ void Drawable::AddBind(std::unique_ptr<Bindable> bind)
         throw ILLEGAL_BINDABLE_STATE("Using Drawable::AddBind to add a Index Buffer. Should use Drawable::AddIndexBuffer instead.");
     }
     binds.push_back(std::move(bind));
+}
+
+void Drawable::AddSharedBind(std::shared_ptr<Bindable> bind)
+{
+    if (typeid(*bind) == typeid(IndexBuffer))
+    {
+        throw ILLEGAL_BINDABLE_STATE("Using Drawable::AddBind to add a Index Buffer. Should use Drawable::AddIndexBuffer instead.");
+    }
+    sharedBinds.push_back(bind);
 }
 
 void Drawable::AddIndexBuffer(std::unique_ptr<IndexBuffer> bind)

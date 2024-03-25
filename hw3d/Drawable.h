@@ -36,6 +36,7 @@ public:
 	virtual void Update(float dt) noexcept = 0;
 protected:
 	void AddBind(std::unique_ptr<Bindable> bind);
+	void AddSharedBind(std::shared_ptr<Bindable> bind);
 	void AddIndexBuffer(std::unique_ptr<IndexBuffer> bind);
 	virtual const std::vector<std::unique_ptr<Bindable>>& GetStaticBinds() const noexcept = 0;
 	virtual void SetIndexFromStatic() noexcept = 0;
@@ -54,4 +55,5 @@ protected:
 private:
 	const class IndexBuffer* pIndexBuffer = nullptr;
 	std::vector<std::unique_ptr<Bindable>> binds;
+	std::vector<std::shared_ptr<Bindable>> sharedBinds;
 };

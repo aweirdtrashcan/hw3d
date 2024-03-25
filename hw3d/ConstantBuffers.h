@@ -90,3 +90,17 @@ public:
 		GetContext(pGfx)->VSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
 	}
 };
+
+template<typename C>
+class TransformConstantBuffer : public ConstantBuffer<C>
+{
+	using Bindable::GetContext;
+	using ConstantBuffer<C>::buffer;
+public:
+	using ConstantBuffer<C>::ConstantBuffer;
+	virtual void Bind(Graphics* pGfx) noexcept override
+	{
+		GetContext(pGfx)->VSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
+		GetContext(pGfx)->PSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
+	}
+};

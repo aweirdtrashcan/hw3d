@@ -22,7 +22,7 @@ struct TransformParameters
 class Mesh : public DrawableBase<Mesh>
 {
 public:
-	Mesh(Graphics* gfx, std::vector<std::unique_ptr<Bindable>> bindables, DirectX::FXMMATRIX transform = DirectX::XMMatrixIdentity());
+	Mesh(Graphics* gfx, std::vector<std::unique_ptr<Bindable>> bindables, std::vector<std::shared_ptr<Bindable>> sharedBindables = {}, DirectX::FXMMATRIX transform = DirectX::XMMatrixIdentity());
 
 	virtual DirectX::XMMATRIX GetTransformXM() const noexcept override;
 	virtual void Update(float dt) noexcept override;
@@ -57,7 +57,7 @@ class Scene
 {
 	friend class SceneWindow;
 public:
-	Scene(Graphics* gfx, const std::string& modelPath);
+	Scene(Graphics* gfx, std::string_view modelPath);
 	void Draw(Graphics* gfx);
 	void ShowWindow(const char* windowName = nullptr) noexcept;
 	~Scene() noexcept;

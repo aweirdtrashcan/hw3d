@@ -2,7 +2,9 @@
 
 #include "Surface.h"
 
-Texture::Texture(Graphics* gfx, const Surface* surface)
+Texture::Texture(Graphics* gfx, Surface&& surface, UINT bindSlot)
+	:
+	bindSlot(bindSlot)
 {
 	INFOMAN(gfx);
 
@@ -11,16 +13,16 @@ Texture::Texture(Graphics* gfx, const Surface* surface)
 	desc.ArraySize = 1;
 	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 	desc.CPUAccessFlags = 0;
-	desc.Height = surface->GetHeight();
+	desc.Height = surface.GetHeight();
 	desc.MipLevels = 1;
 	desc.SampleDesc.Count = 1;
 	desc.SampleDesc.Quality = 0;
 	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.Width = surface->GetWidth();
+	desc.Width = surface.GetWidth();
 
 	D3D11_SUBRESOURCE_DATA srd = {};
-	srd.pSysMem = surface->GetBufferPtrConst();
-	srd.SysMemPitch = surface->GetWidth() * sizeof(Surface::Color);
+	srd.pSysMem = surface.GetBufferPtrConst();
+	srd.SysMemPitch = surface.GetWidth() * sizeof(Surface::Color);
 
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> pTexture;
 
@@ -45,5 +47,5 @@ Texture::Texture(Graphics* gfx, const Surface* surface)
 
 void Texture::Bind(Graphics* gfx) noexcept
 {
-	GetContext(gfx)->PSSetShaderResources(0, 1, pSRV.GetAddressOf());
+	GetContext(gfx)->PSSetShaderResources(bindSlot, 1, pSRV.GetAddressOf());
 }

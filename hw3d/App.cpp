@@ -31,7 +31,7 @@ App::App()
 {
 	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveFovLH(45.f, (float)wnd.GetWidth() / (float)wnd.GetHeight(), 0.1f, 10000.f));
 
-	model = new Scene(wnd.GfxPtr(), "Models\\sponza.obj");
+	model = new Scene(wnd.GfxPtr(), "Models\\Sponza.obj");
 }
 
 App::~App()
@@ -67,12 +67,10 @@ void App::DoFrame()
 
 	if (wnd.Gfx().GetIsPaused()) return;
 
-	const float s = sinf( timer.Peek() ) / 2.5f;
-	const float c = cosf( timer.Peek() ) / 2.5f;
 	wnd.Gfx().SetView(camera.GetMatrix());
 	light.Bind(wnd.GfxPtr());
 
-	wnd.Gfx().BeginFrame( s, c, 1.0f );
+	wnd.Gfx().BeginFrame(0.0f, 0.0f, 0.1f);
 
 	model->Draw(wnd.GfxPtr());
 
@@ -132,6 +130,8 @@ void App::ProcessKeys(float dt)
 
 	if (!wnd.CursorEnabled())
 	{
+		if (wnd.kbd.KeyIsPressed(VK_SHIFT))
+			dt *= 2.0f;
 		if (wnd.kbd.KeyIsPressed('W'))
 		{
 			camera.Translate({ 0.0f, 0.0f, dt });

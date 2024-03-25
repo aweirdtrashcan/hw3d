@@ -4,6 +4,7 @@
 #include "ChiliWin.h"
 
 #include <sstream>
+#include <format>
 
 Log* _local_log = nullptr;
 
@@ -30,36 +31,22 @@ Log::~Log()
 	free(char_stream);
 }
 
-void Log::Debug(const std::string& message, const Log* log)
+void Log::Debug(std::string_view message, const Log* log)
 {
 #ifdef _DEBUG
-	const Log* log_inst = log ? log : _local_log;
-
-	std::stringstream oss;
-
-	oss << "[DEBUG]: " << message << "\n";
-
-	const std::string& str = oss.str();
-
 	DWORD written = 0;
+	std::string output = std::format("[DEBUG]: {}\n", message.data());
 
-	WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), str.c_str(), (DWORD)str.size(), &written, nullptr);
+	WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), output.c_str(), (DWORD)output.size(), &written, nullptr);
 #endif
 }
 
-void Log::Debug(const std::wstring& message, const Log* log)
+void Log::Debug(std::wstring_view message, const Log* log)
 {
 #ifdef _DEBUG
-	const Log* log_inst = log ? log : _local_log;
-
-	std::wstringstream oss;
-
-	oss << L"[DEBUG]: " << message << L"\n";
-
-	const std::wstring& wstr = oss.str();
-
 	DWORD written = 0;
+	std::wstring output = std::format(L"[DEBUG]: {}\n", message.data());
 
-	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wstr.c_str(), (DWORD)wstr.size(), &written, nullptr);
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), output.c_str(), (DWORD)output.size(), &written, nullptr);
 #endif
 }

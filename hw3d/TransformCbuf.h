@@ -18,7 +18,7 @@ public:
 	virtual void Bind(Graphics* pGfx) noexcept override;
 
 private:
-	static inline VertexConstantBuffer<Transforms>* vcbuf;
+	static inline std::unique_ptr<TransformConstantBuffer<Transforms>> vcbuf;
 	const Drawable& parent;
 };
 

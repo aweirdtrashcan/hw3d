@@ -1,4 +1,4 @@
-cbuffer LightCBuf
+cbuffer LightCBuf : register(b0)
 {
     float3 lightPos;
     float diffuseIntensity;
@@ -21,48 +21,20 @@ cbuffer MaterialCBuf : register(b1)
  
 // attenuation 1 / (CONSTANT + LINEAR * distance + QUADRATIC * distance * distance)
 
-float3 FresnelEffect(float3 R0, float3 normal, float3 lightVec);
-float Roughness(float3 halfVec, float3 normal, float shininess);
-
 float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal : wvNormal) : SV_Target
 {
     float3 lightVec = lightPos - worldPos;
     float distL = length(lightVec);
-    lightVec = lightVec / distL;
+    float3 dirToL = lightVec / distL;
     
-    float3 toEye = normalize(eyePos - worldPos);
-    float3 halfVec = normalize(lightVec + toEye);
-    
-    float3 reflectCoeff = FresnelEffect(fresnelR0, halfVec, lightVec);
-    float roughCoeff = Roughness(halfVec, wNormal, shininess);
-    
-    float att = 1 / (attConst + attLin * distL + attQuad * (distL * distL));
-    
-    float ndotl = max(dot(lightVec, wNormal), 0);
-    float lightStrength = ndotl * diffuseIntensity * att;
-    
-    float3 diffuse = albedoColor * lightColor;
-    float3 ambient = albedoColor * ambientColor;
-    
-    float3 specular = reflectCoeff * roughCoeff;
-    specular = specular / (specular + 1);
-    
-    specular *= specularIntensity;
-    
-    float3 specularDiffuse = (diffuse + specular) * lightStrength;
-    return float4(specularDiffuse + ambient, 1.0f);
-}
-
-float3 FresnelEffect(float3 R0, float3 halfVec, float3 lightVec)
-{
-    float angle = 1.0f - saturate(dot(halfVec, lightVec));
-    return R0 + (1.0f - R0) * pow(angle, 5);
-}
-
-float Roughness(float3 halfVec, float3 normal, float shininess)
-{
-    float m = shininess * 256.f;
-    float roughnessFactor = (m + 8.0f) * pow(max(dot(halfVec, normal), 0.0f), m) / 8.0f;
-    
-    return roughnessFactor;
+    const float att = 1.0f / (attConst + attLin * distL + attQuad * (distL * distL));
+	// diffuse intensity
+    const float3 diffuse = albedoColor * diffuseIntensity * att * max(0.0f, dot(dirToL, wNormal));
+	// reflected light vector
+    const float3 w = wNormal * dot(lightVec, wNormal);
+    const float3 r = w * 2.0f - lightVec;
+	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
+    const float3 specular = att * (albedoColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(worldPos))), specularPower);
+	// final color
+    return float4(saturate(diffuse + ambientColor + specular), 1.0f);
 }

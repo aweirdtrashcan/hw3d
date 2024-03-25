@@ -4,19 +4,12 @@ TransformCbuf::TransformCbuf(Graphics* pGfx, const Drawable& parent, UINT slot)
 	:
 	parent(parent)
 {
-	if (!vcbuf)
-	{
-		vcbuf = new VertexConstantBuffer<Transforms>(pGfx, slot);
-	}
+	vcbuf = std::make_unique<TransformConstantBuffer<Transforms>>(pGfx, slot);
 }
 
 TransformCbuf::~TransformCbuf()
 {
-	if (vcbuf) 
-	{
-		delete vcbuf;
-		vcbuf = 0;
-	}
+
 }
 
 void TransformCbuf::Bind(Graphics* pGfx) noexcept
