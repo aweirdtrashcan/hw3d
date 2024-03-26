@@ -1,5 +1,7 @@
 #include "Sampler.h"
 
+#include "BindableCodex.h"
+
 Sampler::Sampler(Graphics* gfx)
 {
 	INFOMAN(gfx);
@@ -19,4 +21,14 @@ Sampler::Sampler(Graphics* gfx)
 void Sampler::Bind(Graphics* gfx) noexcept
 {
 	GetContext(gfx)->PSSetSamplers(0, 1, samplerState.GetAddressOf());
+}
+
+std::shared_ptr<Bindable> Sampler::Resolve(Graphics* gfx)
+{
+	return Codex::Resolve<Sampler>(gfx);
+}
+
+std::string Sampler::GenerateUID()
+{
+	return std::format("{}##", typeid(Sampler).name());
 }

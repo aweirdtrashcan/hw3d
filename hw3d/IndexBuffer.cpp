@@ -4,7 +4,9 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 
-IndexBuffer::IndexBuffer(Graphics* pGfx, const std::vector<unsigned int>& indices)
+#include "BindableCodex.h"
+
+IndexBuffer::IndexBuffer(Graphics* pGfx, const std::vector<unsigned int>& indices, const std::string& tag)
 	:
 	count((UINT)indices.size())
 {
@@ -25,4 +27,14 @@ IndexBuffer::IndexBuffer(Graphics* pGfx, const std::vector<unsigned int>& indice
 void IndexBuffer::Bind(Graphics* pGfx) noexcept
 {
 	GetContext(pGfx)->IASetIndexBuffer(buffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+}
+
+std::shared_ptr<Bindable> IndexBuffer::Resolve(Graphics* gfx, const std::vector<unsigned int>& indices, const std::string& tag)
+{
+	return Codex::Resolve<IndexBuffer>(gfx, indices, tag);
+}
+
+std::string IndexBuffer::GenerateUID(const std::vector<unsigned int>& indices, const std::string& tag)
+{
+	return std::format("{}#{}T{}", typeid(IndexBuffer).name(), indices.size() * sizeof(unsigned int), tag);
 }

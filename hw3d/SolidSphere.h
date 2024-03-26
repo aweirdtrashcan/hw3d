@@ -1,11 +1,11 @@
 #pragma once
 
-#include "DrawableBase.h"
 #include "ConstantBuffers.h"
+#include "Drawable.h"
 
 class Graphics;
 
-class SolidSphere : public DrawableBase<SolidSphere>
+class SolidSphere : public Drawable
 {
 public:
 	SolidSphere(Graphics* gfx, float radius);

@@ -2,11 +2,15 @@
 
 #include "Surface.h"
 
-Texture::Texture(Graphics* gfx, Surface&& surface, UINT bindSlot)
+#include "BindableCodex.h"
+
+Texture::Texture(Graphics* gfx, const std::string& path, UINT bindSlot)
 	:
 	bindSlot(bindSlot)
 {
 	INFOMAN(gfx);
+
+	Surface surface = Surface::FromFile(path);
 
 	D3D11_TEXTURE2D_DESC desc = {};
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -48,4 +52,14 @@ Texture::Texture(Graphics* gfx, Surface&& surface, UINT bindSlot)
 void Texture::Bind(Graphics* gfx) noexcept
 {
 	GetContext(gfx)->PSSetShaderResources(bindSlot, 1, pSRV.GetAddressOf());
+}
+
+std::shared_ptr<Bindable> Texture::Resolve(Graphics* gfx, const std::string& path, UINT bindSlot)
+{
+	return Codex::Resolve<Texture>(gfx, path, bindSlot);
+}
+
+std::string Texture::GenerateUID(const std::string& path, UINT bindSlot)
+{
+	return std::format("{}#{}#{}", typeid(Texture).name(), path, bindSlot);
 }

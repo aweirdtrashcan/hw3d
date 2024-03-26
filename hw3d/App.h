@@ -3,7 +3,6 @@
 #include "Window.h"
 #include <vector>
 #include <set>
-#include "Box.h"
 #include "ImguiManager.h"
 #include "Camera.h"
 #include "PointLight.h"

@@ -2,51 +2,53 @@
 #include "BindableBase.h"
 #include "Macros.h"
 #include "Sphere.h"
-
+#include "BindableCodex.h"
 
 SolidSphere::SolidSphere(Graphics* gfx, float radius)
 {
 	namespace dx = DirectX;
 
-	if (!IsStaticInitialized())
+	struct Vertex
 	{
-		struct Vertex
-		{
-			dx::XMFLOAT3 pos;
-		};
-		auto model = Sphere::Make<Vertex>();
-		model.Transform(dx::XMMatrixScaling(radius, radius, radius));
-		AddBind(std::make_unique<VertexBuffer>(gfx, model.vertices));
-		AddIndexBuffer(std::make_unique<IndexBuffer>(gfx, model.indices));
+		dx::XMFLOAT3 pos;
+	};
+	auto model = Sphere::Make<Vertex>();
+	model.Transform(dx::XMMatrixScaling(radius, radius, radius));
 
-		auto pvs = std::make_unique<VertexShader>(gfx, L"SolidVS.cso");
-		auto pvsbc = pvs->GetBytecode();
-		AddStaticBind(std::move(pvs));
+	hw3dexp::VertexLayout vLayout = hw3dexp::VertexLayout();
+	vLayout.Append(hw3dexp::VertexLayout::Position3D);
+	hw3dexp::VertexBuffer dynVB = hw3dexp::VertexBuffer(vLayout);
 
-		AddStaticBind(std::make_unique<PixelShader>(gfx, L"SolidPS.cso"));
-
-		std::unique_ptr<PixelConstantBuffer<PSColorConstant>> pCb = std::make_unique<PixelConstantBuffer<PSColorConstant>>(gfx, colorConst, 0);
-		cBuf = pCb.get();
-
-		AddStaticBind(std::move(pCb));
-
-		const std::vector<D3D11_INPUT_ELEMENT_DESC> ied =
-		{
-			{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-		};
-		AddStaticBind(std::make_unique<InputLayout>(gfx, ied, pvsbc));
-
-		AddStaticBind(std::make_unique<Topology>(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
-	}
-	else
+	for (auto m : model.vertices)
 	{
-		SetIndexFromStatic();
+		dynVB.EmplaceBack(m.pos);
 	}
 
-	AddBind(std::make_unique<TransformCbuf>(gfx, *this, 2));
+	AddBind(VertexBuffer::Resolve(gfx, dynVB, "solid_sphere_vb"));
+	AddBind(IndexBuffer::Resolve(gfx, model.indices, "solid_sphere_ib"));
+
+	std::shared_ptr<Bindable> pvs = VertexShader::Resolve(gfx, "SolidVS.cso");
+	Microsoft::WRL::ComPtr<ID3DBlob> pvsbc = std::static_pointer_cast<VertexShader>(pvs)->GetBytecode();
+	AddBind(pvs);
+
+	AddBind(PixelShader::Resolve(gfx, "SolidPS.cso"));
+
+	using PSConstBuffer = PixelConstantBuffer<PSColorConstant>;
+	std::shared_ptr<PSConstBuffer> pCb = std::static_pointer_cast<PSConstBuffer>(PSConstBuffer::Resolve(gfx, colorConst, 0));
+	cBuf = pCb.get();
+
+	AddBind(pCb);
+
+	AddBind(InputLayout::Resolve(gfx, vLayout, pvsbc));
+
+	AddBind(Topology::Resolve(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+
+	AddBind(TransformCbuf::Resolve(gfx, *this, "solid_sphere_transformcbuf", 2));
 }
 
-void SolidSphere::Update(float dt) noexcept {}
+void SolidSphere::Update(float dt) noexcept
+{
+}
 
 void SolidSphere::SetPos(const DirectX::XMFLOAT3& pos) noexcept
 {

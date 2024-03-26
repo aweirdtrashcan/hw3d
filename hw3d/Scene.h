@@ -1,6 +1,5 @@
 #pragma once
 
-#include "DrawableBase.h"
 #include "BindableBase.h"
 #include "ShaderStructs.h"
 
@@ -19,10 +18,10 @@ struct TransformParameters
 	float yaw = 0.0f;
 };
 
-class Mesh : public DrawableBase<Mesh>
+class Mesh : public Drawable
 {
 public:
-	Mesh(Graphics* gfx, std::vector<std::unique_ptr<Bindable>> bindables, std::vector<std::shared_ptr<Bindable>> sharedBindables = {}, DirectX::FXMMATRIX transform = DirectX::XMMatrixIdentity());
+	Mesh(Graphics* gfx, std::string meshName, std::vector<std::shared_ptr<Bindable>> bindables, DirectX::FXMMATRIX transform = DirectX::XMMatrixIdentity());
 
 	virtual DirectX::XMMATRIX GetTransformXM() const noexcept override;
 	virtual void Update(float dt) noexcept override;

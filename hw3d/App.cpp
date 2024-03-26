@@ -1,8 +1,5 @@
 #include "App.h"
 
-#include "Pyramid.h"
-#include "Sheet.h"
-#include "SkinnedBox.h"
 #include "Suzanne.h"
 
 #include "GDIPlusManager.h"
@@ -19,6 +16,8 @@
 #include <assimp/postprocess.h>
 
 #include "Scene.h"
+
+#include "BindableCodex.h"
 
 #pragma comment (lib,"Gdiplus.lib")
 

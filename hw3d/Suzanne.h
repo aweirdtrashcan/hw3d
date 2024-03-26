@@ -3,7 +3,7 @@
 #include "TestObject.h"
 #include "ShaderStructs.h"
 
-class Suzanne : public TestObject<Suzanne>
+class Suzanne : public TestObject
 {
 public:
 	Suzanne(Graphics* gfx,

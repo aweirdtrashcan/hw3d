@@ -102,9 +102,6 @@
     <ClCompile Include="Drawable.cpp">
       <Filter>Source Files\Drawable</Filter>
     </ClCompile>
-    <ClCompile Include="Box.cpp">
-      <Filter>Source Files\Drawable</Filter>
-    </ClCompile>
     <ClCompile Include="Topology.cpp">
       <Filter>Source Files\Bindable</Filter>
     </ClCompile>
@@ -114,17 +111,8 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Source Files\Bindable</Filter>
     </ClCompile>
-    <ClCompile Include="Surface.cpp">
-      <Filter>Source Files\Bindable</Filter>
-    </ClCompile>
     <ClCompile Include="Sampler.cpp">
       <Filter>Source Files\Bindable</Filter>
-    </ClCompile>
-    <ClCompile Include="Sheet.cpp">
-      <Filter>Source Files\Drawable</Filter>
-    </ClCompile>
-    <ClCompile Include="SkinnedBox.cpp">
-      <Filter>Source Files\Drawable</Filter>
     </ClCompile>
     <ClCompile Include="imgui_draw.cpp">
       <Filter>Source Files\imgui</Filter>
@@ -156,14 +144,8 @@
     <ClCompile Include="PointLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Pyramid.cpp">
-      <Filter>Source Files\Drawable</Filter>
-    </ClCompile>
     <ClCompile Include="SolidSphere.cpp">
       <Filter>Source Files\Drawable</Filter>
-    </ClCompile>
-    <ClCompile Include="Suzanne.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene.cpp">
       <Filter>Source Files</Filter>
@@ -173,6 +155,12 @@
     </ClCompile>
     <ClCompile Include="Log.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Surface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexBuffer.cpp">
+      <Filter>Source Files\Bindable</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -242,9 +230,6 @@
     <ClInclude Include="TransformCbuf.h">
       <Filter>Header Files\Bindable</Filter>
     </ClInclude>
-    <ClInclude Include="Box.h">
-      <Filter>Header Files\Drawable</Filter>
-    </ClInclude>
     <ClInclude Include="BindableBase.h">
       <Filter>Header Files\Bindable</Filter>
     </ClInclude>
@@ -272,9 +257,6 @@
     <ClInclude Include="Sphere.h">
       <Filter>Header Files\Geometry</Filter>
     </ClInclude>
-    <ClInclude Include="Pyramid.h">
-      <Filter>Header Files\Drawable</Filter>
-    </ClInclude>
     <ClInclude Include="GDIPlusManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -286,15 +268,6 @@
     </ClInclude>
     <ClInclude Include="Sampler.h">
       <Filter>Header Files\Bindable</Filter>
-    </ClInclude>
-    <ClInclude Include="Sheet.h">
-      <Filter>Header Files\Drawable</Filter>
-    </ClInclude>
-    <ClInclude Include="SkinnedBox.h">
-      <Filter>Header Files\Drawable</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawableBase.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="imconfig.h">
       <Filter>Header Files\imgui</Filter>
@@ -338,9 +311,6 @@
     <ClInclude Include="ShaderStructs.h">
       <Filter>Header Files\ShaderStructs</Filter>
     </ClInclude>
-    <ClInclude Include="Suzanne.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TestObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -352,6 +322,9 @@
     </ClInclude>
     <ClInclude Include="Log.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BindableCodex.h">
+      <Filter>Header Files\Bindable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

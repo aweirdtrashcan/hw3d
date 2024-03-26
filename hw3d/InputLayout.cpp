@@ -3,13 +3,17 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 
-InputLayout::InputLayout(Graphics* pGfx, const std::vector<D3D11_INPUT_ELEMENT_DESC>& ied, Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderBytecode)
+#include "BindableCodex.h"
+
+InputLayout::InputLayout(Graphics* pGfx, const hw3dexp::VertexLayout& layout, Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderBytecode)
 {
 	INFOMAN(pGfx);
 
+	std::vector<D3D11_INPUT_ELEMENT_DESC> d3dLayout = layout.GetD3DLayout();
+
 	GFX_THROW_INFO(GetDevice(pGfx)->CreateInputLayout(
-		ied.data(),
-		static_cast<UINT>(ied.size()),
+		d3dLayout.data(),
+		static_cast<UINT>(d3dLayout.size()),
 		pVertexShaderBytecode->GetBufferPointer(),
 		pVertexShaderBytecode->GetBufferSize(),
 		&inputLayout
@@ -19,4 +23,14 @@ InputLayout::InputLayout(Graphics* pGfx, const std::vector<D3D11_INPUT_ELEMENT_D
 void InputLayout::Bind(Graphics* pGfx) noexcept
 {
 	GetContext(pGfx)->IASetInputLayout(inputLayout.Get());
+}
+
+std::shared_ptr<Bindable> InputLayout::Resolve(Graphics* gfx, const hw3dexp::VertexLayout& layout, Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderBytecode)
+{
+	return Codex::Resolve<InputLayout>(gfx, layout, pVertexShaderBytecode);
+}
+
+std::string InputLayout::GenerateUID(const hw3dexp::VertexLayout& layout, Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderBytecode)
+{
+	return std::format("{}#{}", typeid(InputLayout).name(), layout.GetCode());
 }

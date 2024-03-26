@@ -13,8 +13,6 @@
 
 #include <format>
 
-std::unordered_map<std::string, std::shared_ptr<Bindable>> g_SharedBindables;
-
 class SceneWindow
 {
 public:
@@ -66,30 +64,16 @@ private:
     int selectedId = 0;
 };
 
-Mesh::Mesh(Graphics* gfx, std::vector<std::unique_ptr<Bindable>> bindables, std::vector<std::shared_ptr<Bindable>> sharedBindables, DirectX::FXMMATRIX transform)
+Mesh::Mesh(Graphics* gfx, std::string meshName, std::vector<std::shared_ptr<Bindable>> bindables, DirectX::FXMMATRIX transform)
 {
-    if (!IsStaticInitialized())
+    AddBind(Topology::Resolve(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+
+    for (std::shared_ptr<Bindable>& bind : bindables)
     {
-        AddStaticBind(std::make_unique<Topology>(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
+        AddBind(bind);
     }
 
-    for (std::unique_ptr<Bindable>& bind : bindables)
-    {
-        if (IndexBuffer* ibuf = dynamic_cast<IndexBuffer*>(bind.get()))
-        {
-            AddIndexBuffer(std::make_unique<IndexBuffer>(*ibuf));
-            bind.release();
-            continue;
-        }
-        AddBind(std::move(bind));
-    }
-    
-    for (const std::shared_ptr<Bindable>& bind : sharedBindables)
-    {
-        AddSharedBind(bind);
-    }
-
-    AddBind(std::make_unique<TransformCbuf>(gfx, *this, 2));
+    AddBind(TransformCbuf::Resolve(gfx, *this, meshName + "TransformCBuf", 2));
 
     DirectX::XMStoreFloat4x4(&transformation, transform);
 }
@@ -277,26 +261,26 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh)
         indices[i * 3 + 2] = face.mIndices[2];
     }
 
-    std::vector<std::unique_ptr<Bindable>> bindables;
+    std::vector<std::shared_ptr<Bindable>> bindables;
 
-    bindables.push_back(std::make_unique<VertexBuffer>(gfx, vbuf));
-    bindables.push_back(std::make_unique<IndexBuffer>(gfx, indices));
+    bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
+    bindables.push_back(IndexBuffer::Resolve(gfx, indices, std::string(mesh->mName.C_Str()) + "IndexBuffer"));
     
-    std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVS.cso");
-    Microsoft::WRL::ComPtr<ID3DBlob> vBlob = vShader->GetBytecode();
-    bindables.push_back(std::move(vShader));
+    std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVS.cso");
+    Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+    bindables.push_back(vShader);
 
-    bindables.push_back(std::make_unique<PixelShader>(gfx, L"PhongPS.cso"));
+    bindables.push_back(PixelShader::Resolve(gfx, "PhongPS.cso"));
 
-    bindables.push_back(std::make_unique<InputLayout>(gfx, vbuf.GetLayout().GetD3DLayout(), vBlob));
+    bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
 
     PSMaterialConstant material;
     material.albedoColor = { 0.6f, 0.6f, 0.8f };
     material.fresnelR0 = { 0.7f, 0.7f, 0.7f };
 
-    bindables.push_back(std::make_unique<PixelConstantBuffer<PSMaterialConstant>>(gfx, material, 1));
+    bindables.push_back(PixelConstantBuffer<PSMaterialConstant>::Resolve(gfx, material, 1));
 
-    return std::make_unique<Mesh>(gfx, std::move(bindables));
+    return std::make_unique<Mesh>(gfx, mesh->mName.C_Str(), std::move(bindables));
 }
 
 std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const aiMaterial* const* materials)
@@ -331,11 +315,10 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         indices[i * 3 + 2] = face.mIndices[2];
     }
 
-    std::vector<std::unique_ptr<Bindable>> bindables;
-    std::vector<std::shared_ptr<Bindable>> sharedBindables;
+    std::vector<std::shared_ptr<Bindable>> bindables;
 
-    bindables.push_back(std::make_unique<VertexBuffer>(gfx, vbuf));
-    bindables.push_back(std::make_unique<IndexBuffer>(gfx, indices));
+    bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
+    bindables.push_back(IndexBuffer::Resolve(gfx, indices, std::string(mesh->mName.C_Str()) + "IndexBuffer"));
 
     bool hasSpecular = false;
     bool hasNormals = false;
@@ -363,20 +346,11 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         {
             std::string texPath = std::format("Models/{}", texFileName.C_Str());
 
-            if (g_SharedBindables[texPath] == nullptr)
-            {
-                Log::Debug(std::format("Loading diffuse texture \"{}\"", texPath));
-                g_SharedBindables[texPath] = std::make_shared<Texture>(gfx, Surface::FromFile(texPath));
-                Log::Debug(std::format("Diffuse texture \"{}\" was loaded", texPath));
-            }
-            else
-            {
-                Log::Debug(std::format("diffuse texture \"{}\" was already loaded!", texPath));
-            }
-
-            sharedBindables.push_back(g_SharedBindables[texPath]);
+            Log::Debug(std::format("Loading diffuse texture \"{}\"", texPath));
+            bindables.push_back(Texture::Resolve(gfx, texPath));
+            Log::Debug(std::format("Diffuse texture \"{}\" was loaded", texPath));
             
-            bindables.push_back(std::make_unique<Sampler>(gfx));
+            bindables.push_back(Sampler::Resolve(gfx));
         }
 
         if (material->GetTexture(aiTextureType_SPECULAR, 0, &texFileName) == aiReturn_SUCCESS)
@@ -384,18 +358,11 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
             std::string texPath = std::format("Models/{}", texFileName.C_Str());
             hasSpecular = true;
 
-            if (g_SharedBindables[texPath] == nullptr)
-            {
-                Log::Debug(std::format("Loading specular texture \"{}\"", texPath));
-                g_SharedBindables[texPath] = std::make_shared<Texture>(gfx, Surface::FromFile(texPath), 1);
-                Log::Debug(std::format("Specu lar texture \"{}\" was loaded", texPath));
-            }
-            else
-            {
-                Log::Debug(std::format("specular texture \"{}\" was already loaded!", texPath));
-            }
+            Log::Debug(std::format("Loading specular texture \"{}\"", texPath));
+            bindables.push_back(Texture::Resolve(gfx, texPath, 1));
+            Log::Debug(std::format("Specu lar texture \"{}\" was loaded", texPath));
 
-            sharedBindables.push_back(g_SharedBindables[texPath]);
+            bindables.push_back(Sampler::Resolve(gfx));
         }
         else
         {
@@ -409,18 +376,11 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
             std::string texPath = std::format("Models/{}", texFileName.C_Str());
             hasNormals = true;
 
-            if (g_SharedBindables[texPath] == nullptr)
-            {
-                Log::Debug(std::format("Loading normals texture \"{}\"", texPath));
-                g_SharedBindables[texPath] = std::make_shared<Texture>(gfx, Surface::FromFile(texPath), 2);
-                Log::Debug(std::format("Normals texture \"{}\" was loaded", texPath));
-            }
-            else
-            {
-                Log::Debug(std::format("Normals texture \"{}\" was already loaded!", texPath));
-            }
+            Log::Debug(std::format("Loading normals texture \"{}\"", texPath));
+            bindables.push_back(Texture::Resolve(gfx, texPath, 2));
+            Log::Debug(std::format("Normals texture \"{}\" was loaded", texPath));
 
-            sharedBindables.push_back(g_SharedBindables[texPath]);
+            bindables.push_back(Sampler::Resolve(gfx));
         }
     }
 
@@ -428,37 +388,37 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
     {
         if (hasNormals)
         {
-            std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVSTex.cso");
-            Microsoft::WRL::ComPtr<ID3DBlob> vBlob = vShader->GetBytecode();
-            bindables.push_back(std::move(vShader));
+            std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
+            Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+            bindables.push_back(vShader);
 
-            bindables.push_back(std::make_unique<PixelShader>(gfx, L"PhongPSTexNorm.cso"));
+            bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNorm.cso"));
 
-            bindables.push_back(std::make_unique<InputLayout>(gfx, vbuf.GetLayout().GetD3DLayout(), vBlob));
+            bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
         }
         else
         {
-            std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVSTex.cso");
-            Microsoft::WRL::ComPtr<ID3DBlob> vBlob = vShader->GetBytecode();
-            bindables.push_back(std::move(vShader));
+            std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
+            Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+            bindables.push_back(vShader);
 
-            bindables.push_back(std::make_unique<PixelShader>(gfx, L"PhongPSTex.cso"));
+            bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTex.cso"));
 
-            bindables.push_back(std::make_unique<InputLayout>(gfx, vbuf.GetLayout().GetD3DLayout(), vBlob));
+            bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
         }
     }
     else
     {
-        std::unique_ptr<VertexShader> vShader = std::make_unique<VertexShader>(gfx, L"PhongVSTex.cso");
-        Microsoft::WRL::ComPtr<ID3DBlob> vBlob = vShader->GetBytecode();
-        bindables.push_back(std::move(vShader));
+        std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
+        Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+        bindables.push_back(vShader);
 
-        bindables.push_back(std::make_unique<PixelShader>(gfx, L"PhongPSTexNoSpec.cso"));
+        bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNoSpec.cso"));
 
-        bindables.push_back(std::make_unique<InputLayout>(gfx, vbuf.GetLayout().GetD3DLayout(), vBlob));
+        bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
     }
 
-    bindables.push_back(std::make_unique<PixelConstantBuffer<PSMaterialConstant>>(gfx, psMaterial, 1));
+    bindables.push_back(PixelConstantBuffer<PSMaterialConstant>::Resolve(gfx, psMaterial, 1));
 
-    return std::make_unique<Mesh>(gfx, std::move(bindables), sharedBindables);
+    return std::make_unique<Mesh>(gfx, mesh->mName.C_Str(), std::move(bindables));
 }

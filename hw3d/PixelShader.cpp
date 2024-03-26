@@ -3,18 +3,19 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 #include <d3dcompiler.h>
+#include <format>
 
-PixelShader::PixelShader(Graphics* pGfx, const std::wstring& shaderPath)
+#include "BindableCodex.h"
+
+PixelShader::PixelShader(Graphics* pGfx, std::string_view shaderPath)
 {
 	INFOMAN(pGfx);
 
 	Microsoft::WRL::ComPtr<ID3DBlob> blob;
 
-	std::wstringstream wss;
+	std::string fullShaderPath = std::format("Shaders\\{}", shaderPath.data());
 
-	wss << L"Shaders\\" << shaderPath;
-
-	if (FAILED(D3DReadFileToBlob(wss.str().c_str(), &blob)))
+	if (FAILED(D3DReadFileToBlob(std::wstring{ fullShaderPath.begin(), fullShaderPath.end() }.c_str(), &blob)))
 	{
 		std::stringstream ss;
 		ss << "Failed to load Pixel Shader " << std::string(shaderPath.begin(), shaderPath.end());
@@ -32,4 +33,14 @@ PixelShader::PixelShader(Graphics* pGfx, const std::wstring& shaderPath)
 void PixelShader::Bind(Graphics* pGfx) noexcept
 {
 	GetContext(pGfx)->PSSetShader(pixelShader.Get(), nullptr, 0);
+}
+
+std::shared_ptr<Bindable> PixelShader::Resolve(Graphics* gfx, std::string_view shaderPath)
+{
+	return Codex::Resolve<PixelShader>(gfx, shaderPath);
+}
+
+std::string PixelShader::GenerateUID(std::string_view shaderPath)
+{
+	return std::format("{}#{}", typeid(PixelShader).name(), shaderPath);
 }

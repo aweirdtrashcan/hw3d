@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ConstantBuffers.h"
 #include "Drawable.h"
 
 class TransformCbuf : public Bindable
@@ -13,12 +12,14 @@ private:
 		DirectX::XMFLOAT4X4 modelViewProj;
 	};
 public:
-	TransformCbuf(Graphics* pGfx, const Drawable& parent, UINT slot = 0);
+	TransformCbuf(Graphics* pGfx, const Drawable& parent, const std::string& tag, UINT slot = 0);
 	~TransformCbuf();
 	virtual void Bind(Graphics* pGfx) noexcept override;
+	static std::shared_ptr<Bindable> Resolve(Graphics* pGfx, const Drawable& parent, const std::string& tag, UINT slot = 0);
+	static std::string GenerateUID(const Drawable& parent, const std::string& tag, UINT slot = 0);
 
 private:
-	static inline std::unique_ptr<TransformConstantBuffer<Transforms>> vcbuf;
+	static inline std::shared_ptr<Bindable> vcbuf;
 	const Drawable& parent;
 };
 

@@ -5,6 +5,7 @@
 #include "Graphics.h"
 #include "DxgiInfoManager.h"
 #include <string>
+#include "BindableCodex.h"
 
 template<typename C>
 class ConstantBuffer : public Bindable
@@ -76,6 +77,26 @@ public:
 	{
 		GetContext(pGfx)->PSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
 	}
+
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, UINT slot)
+	{
+		return Codex::Resolve<PixelConstantBuffer<C>>(graphics, slot);
+	}
+
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, const C& data, UINT slot)
+	{
+		return Codex::Resolve<PixelConstantBuffer<C>>(gfx, data, slot);
+	}
+
+	static std::string GenerateUID(const C& data, UINT slot)
+	{
+		return std::format("{}PSCB#{}", typeid(PixelConstantBuffer<C>).name(), slot);
+	}
+
+	static std::string GenerateUID(UINT slot)
+	{
+		return std::format("{}PSCB#{}", typeid(PixelConstantBuffer<C>).name(), slot);
+	}
 };
 
 template<typename C>
@@ -88,6 +109,26 @@ public:
 	virtual void Bind(Graphics* pGfx) noexcept override
 	{
 		GetContext(pGfx)->VSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
+	}
+
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, UINT slot)
+	{
+		return Codex::Resolve<VertexConstantBuffer<C>>(graphics, slot);
+	}
+
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, const C& data, UINT slot)
+	{
+		return Codex::Resolve<VertexConstantBuffer<C>>(gfx, data, slot);
+	}
+
+	static std::string GenerateUID(const C& data, UINT slot)
+	{
+		return std::format("{}VSCB#{}", typeid(VertexConstantBuffer<C>).name(), slot);
+	}
+
+	static std::string GenerateUID(UINT slot)
+	{
+		return std::format("{}VSCB#{}", typeid(VertexConstantBuffer<C>).name(), slot);
 	}
 };
 
@@ -102,5 +143,25 @@ public:
 	{
 		GetContext(pGfx)->VSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
 		GetContext(pGfx)->PSSetConstantBuffers(bindSlot, 1, buffer.GetAddressOf());
+	}
+
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, UINT slot)
+	{
+		return Codex::Resolve<TransformConstantBuffer<C>>(gfx, slot);
+	}
+
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, const C& data, UINT slot)
+	{
+		return Codex::Resolve<TransformConstantBuffer<C>>(gfx, data, slot);
+	}
+
+	static std::string GenerateUID(const C& data, UINT slot)
+	{
+		return std::format("{}TSCB#{}", typeid(TransformConstantBuffer<C>).name(), slot);
+	}
+
+	static std::string GenerateUID(UINT slot)
+	{
+		return std::format("{}TSCB#{}", typeid(TransformConstantBuffer<C>).name(), slot);
 	}
 };

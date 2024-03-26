@@ -33,42 +33,49 @@ namespace hw3dexp
 			using SysType = DirectX::XMFLOAT2;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32_FLOAT;
 			static constexpr const char* semantic = "Position";
+			static constexpr const char* code = "P2";
 		};
 		template<> struct Map<Position3D>
 		{
 			using SysType = DirectX::XMFLOAT3;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 			static constexpr const char* semantic = "Position";
+			static constexpr const char* code = "P3";
 		};
 		template<> struct Map<Texture2D>
 		{
 			using SysType = DirectX::XMFLOAT2;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32_FLOAT;
 			static constexpr const char* semantic = "Texcoord";
+			static constexpr const char* code = "T2";
 		};
 		template<> struct Map<Normal>
 		{
 			using SysType = DirectX::XMFLOAT3;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 			static constexpr const char* semantic = "Normal";
+			static constexpr const char* code = "N3";
 		};
 		template<> struct Map<Float3Color>
 		{
 			using SysType = DirectX::XMFLOAT3;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 			static constexpr const char* semantic = "Color";
+			static constexpr const char* code = "C3";
 		};
 		template<> struct Map<Float4Color>
 		{
 			using SysType = DirectX::XMFLOAT4;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32B32A32_FLOAT;
 			static constexpr const char* semantic = "Color";
+			static constexpr const char* code = "C4";
 		};
 		template<> struct Map<BGRAColor>
 		{
 			using SysType = hw3dexp::BGRAColor;
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 			static constexpr const char* semantic = "Color";
+			static constexpr const char* code = "C8";
 		};
 
 		class Element
@@ -80,6 +87,7 @@ namespace hw3dexp
 			size_t Size() const noexcept(!IS_DEBUG);
 			static inline constexpr size_t SizeOf(ElementType type) noexcept(!IS_DEBUG);
 			ElementType GetType() const noexcept;
+			const char* GetCode() const noexcept;
 			D3D11_INPUT_ELEMENT_DESC GetDesc() const noexcept(!IS_DEBUG);
 		private:
 			template<ElementType type>
@@ -109,6 +117,7 @@ namespace hw3dexp
 		VertexLayout& Append(ElementType type) noexcept(!IS_DEBUG);
 		size_t Size() const noexcept(!IS_DEBUG);
 		size_t GetElementCount() const noexcept;
+		std::string GetCode() const noexcept;
 		std::vector<D3D11_INPUT_ELEMENT_DESC> GetD3DLayout() const noexcept(!IS_DEBUG);
 	private:
 		std::vector<Element> elements;

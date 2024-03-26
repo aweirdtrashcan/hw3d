@@ -3,15 +3,16 @@
 #include "DxgiInfoManager.h"
 #include "Graphics.h"
 #include <d3dcompiler.h>
+#include <format>
+#include "BindableCodex.h"
 
-VertexShader::VertexShader(Graphics* pGfx, const std::wstring& shaderPath)
+VertexShader::VertexShader(Graphics* pGfx, const std::string& shaderPath)
 {
 	INFOMAN(pGfx);
 
-	std::wstringstream wss;
-	wss << L"Shaders\\" << shaderPath;
+	std::string fullShaderPath = std::format("Shaders\\{}", shaderPath);
 
-	if (FAILED(D3DReadFileToBlob(wss.str().c_str(), &shaderBlob)))
+	if (FAILED(D3DReadFileToBlob(std::wstring{ fullShaderPath.begin(), fullShaderPath.end() }.c_str(), &shaderBlob)))
 	{
 		std::stringstream ss;
 		ss << "Failed to load Vertex Shader " << std::string(shaderPath.begin(), shaderPath.end());
@@ -34,4 +35,14 @@ void VertexShader::Bind(Graphics* pGfx) noexcept
 Microsoft::WRL::ComPtr<ID3DBlob> VertexShader::GetBytecode() const noexcept
 {
 	return shaderBlob;
+}
+
+std::shared_ptr<Bindable> VertexShader::Resolve(Graphics* gfx, const std::string& shaderPath)
+{
+	return Codex::Resolve<VertexShader>(gfx, shaderPath);
+}
+
+std::string VertexShader::GenerateUID(const std::string& shaderPath)
+{
+	return std::format("{}#{}", typeid(VertexShader).name(), shaderPath);
 }

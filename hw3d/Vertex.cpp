@@ -50,6 +50,36 @@ namespace hw3dexp
 		return type;
 	}
 
+	const char* VertexLayout::Element::GetCode() const noexcept
+	{
+		switch (type)
+		{
+		case hw3dexp::VertexLayout::Position2D:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Position2D>::code;
+			break;
+		case hw3dexp::VertexLayout::Position3D:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Position3D>::code;
+			break;
+		case hw3dexp::VertexLayout::Texture2D:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Texture2D>::code;
+			break;
+		case hw3dexp::VertexLayout::Normal:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Normal>::code;
+			break;
+		case hw3dexp::VertexLayout::Float3Color:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Float3Color>::code;
+			break;
+		case hw3dexp::VertexLayout::Float4Color:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Float4Color>::code;
+			break;
+		case hw3dexp::VertexLayout::BGRAColor:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::BGRAColor>::code;
+			break;
+		}
+		assert("Invalid element type" && false);
+		return "Invalid";
+	}
+
 	D3D11_INPUT_ELEMENT_DESC VertexLayout::Element::GetDesc() const noexcept(!IS_DEBUG)
 	{
 		switch (type)
@@ -92,6 +122,15 @@ namespace hw3dexp
 	size_t VertexLayout::GetElementCount() const noexcept
 	{
 		return elements.size();
+	}
+	std::string VertexLayout::GetCode() const noexcept
+	{
+		std::string code;
+		for (const Element& e : elements)
+		{
+			code += e.GetCode();
+		}
+		return code;
 	}
 	std::vector<D3D11_INPUT_ELEMENT_DESC> VertexLayout::GetD3DLayout() const noexcept(!IS_DEBUG)
 	{
