@@ -323,7 +323,9 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
     bool hasSpecular = false;
     bool hasNormals = false;
 
-    PSMaterialConstant psMaterial;
+    PSMaterialConstant psMaterial{};
+    psMaterial.albedoColor = {1.0f, 0.0f, 0.0f };
+    psMaterial.specularIntensity = 1.0f;
 
     if (mesh->mMaterialIndex >= 0)
     {

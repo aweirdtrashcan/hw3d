@@ -185,6 +185,7 @@
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Sampler.cpp" />
     <ClCompile Include="SolidSphere.cpp" />
+    <ClCompile Include="Square.cpp" />
     <ClCompile Include="Surface.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Topology.cpp" />
@@ -241,6 +242,7 @@
     <ClInclude Include="ShaderStructs.h" />
     <ClInclude Include="SolidSphere.h" />
     <ClInclude Include="Sphere.h" />
+    <ClInclude Include="Square.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="TestObject.h" />
     <ClInclude Include="Texture.h" />

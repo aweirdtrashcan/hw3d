@@ -38,6 +38,7 @@ private:
 	static Codex& Get()
 	{
 		static Codex codex;
+
 		return codex;
 	}
 private:

@@ -41,10 +41,14 @@ float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal
     
     float att = 1 / (attConst + attLin * distL + attQuad * (distL * distL));
     
-    float3 nNormal = normalize(mul(normalTex.Sample(ss, texCoord).xyz, (float3x3)model));
+    float3 nNormal = normalTex.Sample(ss, texCoord).xyz;
+
+    nNormal.xz = nNormal.xz * 2.0f - 1.0f;
+    nNormal.y = -nNormal.y * 2.0f + 1.0f;
+    
     const float3 diffuse = albedoColor * lightColor * diffuseIntensity * att * max(0.0f, dot(dirToL, nNormal));
 	// reflected light vector
-    const float3 w = wvNormal * dot(lightVec, wvNormal);
+    const float3 w = nNormal * dot(lightVec, nNormal);
     const float3 r = w * 2.0f - lightVec;
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
     const float4 specularSample = specularTex.Sample(ss, texCoord);

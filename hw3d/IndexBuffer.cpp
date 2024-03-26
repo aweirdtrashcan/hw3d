@@ -36,5 +36,5 @@ std::shared_ptr<Bindable> IndexBuffer::Resolve(Graphics* gfx, const std::vector<
 
 std::string IndexBuffer::GenerateUID(const std::vector<unsigned int>& indices, const std::string& tag)
 {
-	return std::format("{}#{}T{}", typeid(IndexBuffer).name(), indices.size() * sizeof(unsigned int), tag);
+	return std::format("{}#T{}", typeid(IndexBuffer).name(), tag);
 }

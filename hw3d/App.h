@@ -8,6 +8,7 @@
 #include "PointLight.h"
 #include "Log.h"
 #include "Mouse.h"
+#include "Scene.h"
 
 class App
 {
@@ -27,6 +28,7 @@ private:
 	ChiliTimer timer;
 	Camera camera;
 	PointLight light;
-	class Scene* model = nullptr;
+	Scene* model;
 	bool showDemoWindow = false;
+	void* square = nullptr;
 };

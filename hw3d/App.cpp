@@ -19,6 +19,8 @@
 
 #include "BindableCodex.h"
 
+#include "Square.h"
+
 #pragma comment (lib,"Gdiplus.lib")
 
 GDIPlusManager gdipm;
@@ -30,12 +32,14 @@ App::App()
 {
 	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveFovLH(45.f, (float)wnd.GetWidth() / (float)wnd.GetHeight(), 0.1f, 10000.f));
 
-	model = new Scene(wnd.GfxPtr(), "Models\\Sponza.obj");
+	//model = new Scene(wnd.GfxPtr(), "Models\\Sponza.obj");
+	square = new Square(wnd.GfxPtr(), 10.f);
 }
 
 App::~App()
 {
-	delete model;
+	delete (Square*)square;
+	//delete model;
 }
 
 int App::Go()
@@ -71,12 +75,11 @@ void App::DoFrame()
 
 	wnd.Gfx().BeginFrame(0.0f, 0.0f, 0.1f);
 
-	model->Draw(wnd.GfxPtr());
-
 	light.Draw(wnd.GfxPtr());
+	((Square*)square)->Draw(wnd.GfxPtr());
 	if (wnd.Gfx().IsImguiEnabled())
 	{
-		model->ShowWindow("Sponza");
+		/*model->ShowWindow("Sponza");*/
 		light.SpawnControlWindow();
 		SpawnImguiWindow();
 		camera.SpawnControlWindow();

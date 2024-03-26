@@ -20,6 +20,6 @@ VSOut main(float3 pos : Position, float3 normal : Normal)
     vout.pos = mul(posf4, modelViewProj);
     vout.wNormal = normalize(mul(normal, (float3x3) model));
     vout.wvNormal = normalize(mul(normal, (float3x3) modelView));
-    vout.worldPos = (float3) mul(posf4, model);
+    vout.worldPos = (float3) mul(posf4, modelView);
     return vout;
 }

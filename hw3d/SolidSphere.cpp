@@ -3,6 +3,7 @@
 #include "Macros.h"
 #include "Sphere.h"
 #include "BindableCodex.h"
+#include "ShaderStructs.h"
 
 SolidSphere::SolidSphere(Graphics* gfx, float radius)
 {
@@ -34,7 +35,7 @@ SolidSphere::SolidSphere(Graphics* gfx, float radius)
 	AddBind(PixelShader::Resolve(gfx, "SolidPS.cso"));
 
 	using PSConstBuffer = PixelConstantBuffer<PSColorConstant>;
-	std::shared_ptr<PSConstBuffer> pCb = std::static_pointer_cast<PSConstBuffer>(PSConstBuffer::Resolve(gfx, colorConst, 0));
+	std::shared_ptr<PSConstBuffer> pCb = std::static_pointer_cast<PSConstBuffer>(PSConstBuffer::Resolve(gfx, colorConst, 3));
 	cBuf = pCb.get();
 
 	AddBind(pCb);
@@ -42,8 +43,9 @@ SolidSphere::SolidSphere(Graphics* gfx, float radius)
 	AddBind(InputLayout::Resolve(gfx, vLayout, pvsbc));
 
 	AddBind(Topology::Resolve(gfx, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST));
-
 	AddBind(TransformCbuf::Resolve(gfx, *this, "solid_sphere_transformcbuf", 2));
+	
+
 }
 
 void SolidSphere::Update(float dt) noexcept

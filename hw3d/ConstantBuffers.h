@@ -80,7 +80,7 @@ public:
 
 	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, UINT slot)
 	{
-		return Codex::Resolve<PixelConstantBuffer<C>>(graphics, slot);
+		return Codex::Resolve<PixelConstantBuffer<C>>(gfx, slot);
 	}
 
 	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, const C& data, UINT slot)
