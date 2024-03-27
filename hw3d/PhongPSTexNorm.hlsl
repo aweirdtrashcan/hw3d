@@ -27,8 +27,8 @@ cbuffer CBuf : register(b2)
 };
 
 Texture2D tex : register(t0);
-Texture2D normTex : register(t2);
 Texture2D specularTex : register(t1);
+Texture2D normTex : register(t2);
 SamplerState ss;
  
 struct PSIn
@@ -58,7 +58,8 @@ float4 main(PSIn psin) : SV_Target
         psin.wvNormal
     );
     
-    float3 n = normTex.Sample(ss, psin.texCoord).xyz * 2.0f - 1.0f;
+    float3 n = normTex.Sample(ss, psin.texCoord);
+    n = n * 2.0f - 1.0f;
     n = mul(n, tanToView);
     
     const float3 diffuse = albedoColor * diffuseIntensity * att * max(0.0f, dot(dirToL, n));

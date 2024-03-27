@@ -19,7 +19,8 @@ protected:
 		const void* GetImageRawData() const noexcept;
 
 	private:
-		void ConvertPng() noexcept(!IS_DEBUG);
+		bool ConvertPng() noexcept(!IS_DEBUG);
+		void ConvertXXXA() noexcept(!IS_DEBUG);
 	private:
 		std::string path;
 		unsigned char* imageData;

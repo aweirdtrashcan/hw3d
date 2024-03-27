@@ -76,7 +76,9 @@ Texture::TextureImage::TextureImage(const std::string& path)
 	converted(false)
 {
 	imageData = stbi_load(path.c_str(), &width, &height, &channels, 0);
-	ConvertPng();
+	if (!ConvertPng()) {
+		ConvertXXXA();
+	}
 }
 
 Texture::TextureImage::~TextureImage()
@@ -130,57 +132,107 @@ const void* Texture::TextureImage::GetImageRawData() const noexcept
 	return imageData;
 }
 
-void Texture::TextureImage::ConvertPng() noexcept(!IS_DEBUG)
+bool Texture::TextureImage::ConvertPng() noexcept(!IS_DEBUG)
 {
-	if (channels != 3)
+	if (channels == 3)
+	{
+		struct JPGColor
+		{
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+		};
+
+		struct PNGColor
+		{
+			PNGColor(JPGColor pc)
+				:
+				r(pc.r),
+				g(pc.g),
+				b(pc.b),
+				a(0)
+			{}
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+			unsigned char a;
+		};
+
+		size_t pngSize = width * height * sizeof(PNGColor);
+		unsigned char* png = new unsigned char[pngSize];
+
+		size_t pixelColorIndex = 0;
+
+		for (int h = 0; h < height * 3; h += 3)
+		{
+			for (int w = 0; w < width * 3; w += 3)
+			{
+				size_t colorIndex = (h * height) + w;
+				JPGColor* jc = (JPGColor*)&imageData[colorIndex];
+				PNGColor pc(*jc);
+				memcpy(&png[pixelColorIndex], &pc, sizeof(pc));
+				pixelColorIndex += 4;
+			}
+		}
+
+		channels = 4;
+		converted = true;
+
+		stbi_image_free(imageData);
+
+		imageData = png;
+
+		return true;
+	}
+	else
 	{
 		converted = false;
-		return;
+		return false;
 	}
+}
 
-	struct JPGColor
+void Texture::TextureImage::ConvertXXXA() noexcept(!IS_DEBUG)
+{
+	if (channels == 1 && !converted)
 	{
-		unsigned char r;
-		unsigned char g;
-		unsigned char b;
-	};
+		printf("Found an 1 channel image... %s\n", path.c_str());
 
-	struct PNGColor
-	{
-		PNGColor(JPGColor* pc)
-			:
-			r(pc->r),
-			g(pc->g),
-			b(pc->b),
-			a(0)
-		{}
-		unsigned char r;
-		unsigned char g;
-		unsigned char b;
-		unsigned char a;
-	};
-
-	size_t pngSize = width * height * sizeof(PNGColor);
-	unsigned char* png = new unsigned char[pngSize];
-
-	size_t pixelColorIndex = 0;
-
-	for (int h = 0; h < height * 3; h += 3)
-	{
-		for (int w = 0; w < width * 3; w += 3)
+		struct PNGColor
 		{
-			size_t colorIndex = (h * height) + w;
-			JPGColor* jc = (JPGColor*)&imageData[colorIndex];
-			PNGColor pc(jc);
-			memcpy(&png[pixelColorIndex], &pc, sizeof(pc));
-			pixelColorIndex += 4;
+			PNGColor(unsigned char a)
+				:
+				b(a),
+				g(a),
+				r(a),
+				a(a)
+			{}
+			unsigned char r;
+			unsigned char g;
+			unsigned char b;
+			unsigned char a;
+		};
+
+		size_t pngSize = width * height * sizeof(PNGColor);
+		unsigned char* png = new unsigned char[pngSize];
+
+		size_t pngIndex = 0;
+
+		for (int h = 0; h < height; h++)
+		{
+			for (int w = 0; w < width; w++)
+			{
+				size_t colorIndex = (h * height) + w;
+				PNGColor col = PNGColor(imageData[colorIndex]);
+				memcpy(&png[pngIndex], &col, sizeof(PNGColor));
+				pngIndex += 4;
+			}
 		}
+
+		converted = true;
+		channels = 4;
+
+		stbi_image_free(imageData);
+
+		imageData = png;
 	}
-
-	channels = 4;
-	converted = true;
-
-	stbi_image_free(imageData);
-	
-	imageData = png;
 }
