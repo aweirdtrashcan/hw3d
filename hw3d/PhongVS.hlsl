@@ -7,9 +7,10 @@ cbuffer CBuf : register(b2)
 
 struct VSOut
 {
-    float3 worldPos : Position;
+    float3 worldViewPos : Position;
     float3 wNormal : Normal;
     float3 wvNormal : wvNormal;
+    float3 worldPos : PositionW;
     float4 pos : SV_Position;
 };
     
@@ -20,6 +21,7 @@ VSOut main(float3 pos : Position, float3 normal : Normal)
     vout.pos = mul(posf4, modelViewProj);
     vout.wNormal = normalize(mul(normal, (float3x3) model));
     vout.wvNormal = normalize(mul(normal, (float3x3) modelView));
-    vout.worldPos = (float3) mul(posf4, modelView);
+    vout.worldViewPos = (float3) mul(posf4, modelView);
+    vout.worldPos = (float3) mul(posf4, model);
     return vout;
 }

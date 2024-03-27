@@ -38,8 +38,10 @@ App::App()
 
 App::~App()
 {
-	delete (Square*)square;
-	delete model;
+	if (square)
+		delete (Square*)square;
+	if (model)
+		delete model;
 }
 
 int App::Go()
@@ -77,6 +79,7 @@ void App::DoFrame()
 
 	light.Draw(wnd.GfxPtr());
 	model->Draw(wnd.GfxPtr());
+	//((Square*)this->square)->Draw(wnd.GfxPtr());
 	if (wnd.Gfx().IsImguiEnabled())
 	{
 		model->ShowWindow("Sponza");

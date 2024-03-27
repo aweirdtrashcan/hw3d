@@ -62,8 +62,8 @@ Square::Square(Graphics* gfx, float scaleFactor)
 	
 	AddBind(PixelConstantBuffer<PSMaterialConstant>::Resolve(gfx, mat, 1));
 	
-	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_basecolor.jpg"));
-	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_normal.jpg", 1));
+	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_basecolor.jpg", 0));
+	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_normal.jpg", 2));
 
 	AddBind(TransformCbuf::Resolve(gfx, *this, "square_tcb", 2));
 }

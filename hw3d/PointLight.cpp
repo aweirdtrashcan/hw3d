@@ -18,9 +18,9 @@ void PointLight::SpawnControlWindow() noexcept
 	if (ImGui::Begin("Light"))
 	{
 		ImGui::Text("Position");
-		ImGui::SliderFloat("X", &cbCpu.lightPos.x, -60.f, 60.f, "%.1f");
-		ImGui::SliderFloat("Y", &cbCpu.lightPos.y, -60.f, 60.f, "%.1f");
-		ImGui::SliderFloat("Z", &cbCpu.lightPos.z, -60.f, 60.f, "%.1f");
+		ImGui::SliderFloat("X", &cbCpu.lightPos.x, -360.f, 360.f, "%.1f");
+		ImGui::SliderFloat("Y", &cbCpu.lightPos.y, -360.f, 360.f, "%.1f");
+		ImGui::SliderFloat("Z", &cbCpu.lightPos.z, -360.f, 360.f, "%.1f");
 		if (ImGui::Button("Reset"))
 		{
 			Reset();

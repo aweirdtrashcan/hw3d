@@ -234,53 +234,7 @@ std::unique_ptr<Node> Scene::ParseNode(const aiNode* node)
 
 std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh)
 {
-    hw3dexp::VertexBuffer vbuf(
-        hw3dexp::VertexLayout()
-            .Append(hw3dexp::VertexLayout::Position3D)
-            .Append(hw3dexp::VertexLayout::Normal)
-    );
-
-    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-    {
-        DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
-        DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
-
-        vbuf.EmplaceBack(
-            *position, 
-            *normal
-        );
-    }
-
-    std::vector<unsigned int> indices(mesh->mNumFaces * 3);
-    
-    for (unsigned int i = 0; i < mesh->mNumFaces; i++)
-    {
-        const aiFace& face = mesh->mFaces[i];
-        indices[i * 3 + 0] = face.mIndices[0];
-        indices[i * 3 + 1] = face.mIndices[1];
-        indices[i * 3 + 2] = face.mIndices[2];
-    }
-
-    std::vector<std::shared_ptr<Bindable>> bindables;
-
-    bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
-    bindables.push_back(IndexBuffer::Resolve(gfx, indices, std::string(mesh->mName.C_Str()) + "IndexBuffer"));
-    
-    std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVS.cso");
-    Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
-    bindables.push_back(vShader);
-
-    bindables.push_back(PixelShader::Resolve(gfx, "PhongPS.cso"));
-
-    bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
-
-    PSMaterialConstant material;
-    material.albedoColor = { 0.6f, 0.6f, 0.8f };
-    material.fresnelR0 = { 0.7f, 0.7f, 0.7f };
-
-    bindables.push_back(PixelConstantBuffer<PSMaterialConstant>::Resolve(gfx, material, 1));
-
-    return std::make_unique<Mesh>(gfx, mesh->mName.C_Str(), std::move(bindables));
+    return { };
 }
 
 std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const aiMaterial* const* materials)
@@ -362,7 +316,7 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
 
             Log::Debug(std::format("Loading specular texture \"{}\"", texPath));
             bindables.push_back(Texture::Resolve(gfx, texPath, 1));
-            Log::Debug(std::format("Specu lar texture \"{}\" was loaded", texPath));
+            Log::Debug(std::format("Specular texture \"{}\" was loaded", texPath));
 
             bindables.push_back(Sampler::Resolve(gfx));
         }
@@ -386,9 +340,9 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         }
     }
 
-    if (hasSpecular)
+    if (hasNormals)
     {
-        if (hasNormals)
+        if (hasSpecular)
         {
             std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
             Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
@@ -404,7 +358,7 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
             Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
             bindables.push_back(vShader);
 
-            bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTex.cso"));
+            bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNoSpec.cso"));
 
             bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
         }
@@ -415,7 +369,7 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
         bindables.push_back(vShader);
 
-        bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNoSpec.cso"));
+        bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTex.cso"));
 
         bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
     }

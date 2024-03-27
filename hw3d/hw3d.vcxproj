@@ -243,6 +243,7 @@
     <ClInclude Include="SolidSphere.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Square.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="Surface.h" />
     <ClInclude Include="TestObject.h" />
     <ClInclude Include="Texture.h" />

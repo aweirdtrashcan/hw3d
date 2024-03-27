@@ -27,34 +27,35 @@ cbuffer CBuf : register(b2)
 };
 
 Texture2D tex : register(t0);
-Texture2D specularTex : register(t1);
 Texture2D normalTex : register(t2);
+Texture2D specularTex : register(t1);
 SamplerState ss;
  
 // attenuation 1 / (CONSTANT + LINEAR * distance + QUADRATIC * distance * distance)
 
-float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal : wvNormal, float2 texCoord : TexCoord) : SV_Target
+float4 main(float3 worldViewPos : Position, float3 wNormal : Normal, float3 wvNormal : wvNormal, float2 texCoord : TexCoord, float3 worldPos: PositionW) : SV_Target
 {
-    float3 lightVec = lightPos - worldPos;
+    float3 lightVec = mul(lightPos, (float3x3) model) - worldViewPos;
     float distL = length(lightVec);
     float3 dirToL = lightVec / distL;
     
     float att = 1 / (attConst + attLin * distL + attQuad * (distL * distL));
     
-    float3 nNormal = normalTex.Sample(ss, texCoord).xyz;
+    wNormal = normalTex.Sample(ss, texCoord).xyz;
 
-    nNormal.xz = nNormal.xz * 2.0f - 1.0f;
-    nNormal.y = -nNormal.y * 2.0f + 1.0f;
+    wNormal.x = wNormal.x * 2.0f - 1.0f;
+    wNormal.yz = -wNormal.yz * 2.0f + 1.0f;
     
-    const float3 diffuse = albedoColor * lightColor * diffuseIntensity * att * max(0.0f, dot(dirToL, nNormal));
+    
+    const float3 diffuse = diffuseIntensity * att * max(0.0f, dot(dirToL, wNormal));
 	// reflected light vector
-    const float3 w = nNormal * dot(lightVec, nNormal);
+    const float3 w = wNormal * dot(lightVec, wNormal);
     const float3 r = w * 2.0f - lightVec;
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
     const float4 specularSample = specularTex.Sample(ss, texCoord);
     const float3 specularReflectionColor = specularSample.rgb;
     const float specularPower = pow(2.0f, specularSample.a * 13.0f);
-    const float3 specular = att * (albedoColor * diffuseIntensity) * pow(max(0.0f, dot(normalize(-r), normalize(worldPos))), specularPower);
+    const float3 specular = att * (albedoColor * diffuseIntensity) * pow(max(0.0f, dot(normalize(-r), normalize(worldViewPos))), specularPower);
 	// final color
     return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, texCoord).rgb + specular * specularReflectionColor), 1.0f);
 }

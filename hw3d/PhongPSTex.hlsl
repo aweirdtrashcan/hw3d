@@ -35,7 +35,7 @@ float4 main(float3 worldPos : Position, float3 wNormal : Normal, float3 wvNormal
     
     const float3 diffuse = albedoColor * lightColor * diffuseIntensity * att * max(0.0f, dot(dirToL, wNormal));
 	// reflected light vector
-    const float3 w = wvNormal * dot(lightVec, wvNormal);
+    const float3 w = wNormal * dot(lightVec, wNormal);
     const float3 r = w * 2.0f - lightVec;
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
     const float4 specularSample = specularTex.Sample(ss, texCoord);
