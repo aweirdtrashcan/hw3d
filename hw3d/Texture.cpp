@@ -85,7 +85,7 @@ Texture::TextureImage::~TextureImage()
 	{
 		if (converted)
 		{
-			free(imageData);
+			delete[] imageData;
 		}
 		else
 		{
@@ -161,8 +161,7 @@ void Texture::TextureImage::ConvertPng() noexcept(!IS_DEBUG)
 	};
 
 	size_t pngSize = width * height * sizeof(PNGColor);
-	unsigned char* png = (unsigned char*)malloc(pngSize);
-	//memset(png, 0, pngSize);
+	unsigned char* png = new unsigned char[pngSize];
 
 	size_t pixelColorIndex = 0;
 
