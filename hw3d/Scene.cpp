@@ -167,8 +167,8 @@ Scene::Scene(Graphics* gfx, std::string_view modelPath)
 
     const aiScene* scene = imp.ReadFile(
         modelPath.data(),
-        aiProcess_Triangulate | aiProcess_JoinIdenticalVertices |
-        aiProcess_ConvertToLeftHanded | aiProcess_GenNormals
+        aiProcess_Triangulate | aiProcess_ConvertToLeftHanded | 
+        aiProcess_GenNormals | aiProcess_CalcTangentSpace
     );
 
     Log::Debug(std::format("The model \"{}\" was loaded!", modelPath));
@@ -244,6 +244,8 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         .Append(hw3dexp::VertexLayout::Position3D)
         .Append(hw3dexp::VertexLayout::Normal)
         .Append(hw3dexp::VertexLayout::Texture2D)
+        .Append(hw3dexp::VertexLayout::Tangent)
+        .Append(hw3dexp::VertexLayout::BiTangent)
     );
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -251,11 +253,15 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
         DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
         DirectX::XMFLOAT2 texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+        DirectX::XMFLOAT3* tangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mTangents[i]);
+        DirectX::XMFLOAT3* biTangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mBitangents[i]);
 
         vbuf.EmplaceBack(
             *position,
             *normal,
-            texCoord
+            texCoord,
+            *tangent,
+            *biTangent
         );
     }
 
@@ -278,23 +284,14 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
     bool hasNormals = false;
 
     PSMaterialConstant psMaterial{};
-    psMaterial.albedoColor = {1.0f, 0.0f, 0.0f };
+    psMaterial.albedoColor = { 1.0f, 1.0f, 1.0f };
     psMaterial.specularIntensity = 1.0f;
 
     if (mesh->mMaterialIndex >= 0)
     {
         const aiMaterial* material = materials[mesh->mMaterialIndex];
 
-        for (unsigned int i = 0; i < material->mNumProperties; i++)
-        {
-            aiMaterialProperty* property = material->mProperties[i];
-            
-            if (strcmp(property->mKey.C_Str(), "$clr.diffuse") == 0)
-            {
-                memcpy(&psMaterial.albedoColor, property->mData, property->mDataLength);
-                break;
-            }
-        }
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, psMaterial.albedoColor);
 
         aiString texFileName;
         

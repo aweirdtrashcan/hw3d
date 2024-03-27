@@ -2,12 +2,14 @@
 
 #include "BindableCodex.h"
 
+std::shared_ptr<Bindable> TransformCbuf::vcbuf;
+
 TransformCbuf::TransformCbuf(Graphics* pGfx, const Drawable& parent, const std::string& tag, UINT slot)
 	:
 	parent(parent)
 {
-	using TCB = TransformConstantBuffer<Transforms>;
-	vcbuf = TCB::Resolve(pGfx, slot);
+	using VPCB = VertexPixelConstantBuffer<Transforms>;
+	vcbuf = std::static_pointer_cast<VPCB>( VPCB::Resolve(pGfx, slot));
 }
 
 TransformCbuf::~TransformCbuf()
@@ -32,12 +34,13 @@ void TransformCbuf::Bind(Graphics* pGfx) noexcept
 	DirectX::XMStoreFloat4x4(&transforms.model, DirectX::XMMatrixTranspose(model));
 	DirectX::XMStoreFloat4x4(&transforms.modelView, DirectX::XMMatrixTranspose(model * view));
 
-	using TCB = TransformConstantBuffer<Transforms>;
-	std::static_pointer_cast<TCB>(vcbuf)->Update(
+	using VPCB = VertexPixelConstantBuffer<Transforms>;
+	VPCB* tcb = (VPCB*)vcbuf.get();
+	tcb->Update(
 		pGfx,
 		transforms
 	);
-	vcbuf->Bind(pGfx);
+	tcb->Bind(pGfx);
 }
 
 std::shared_ptr<Bindable> TransformCbuf::Resolve(Graphics* pGfx, const Drawable& parent, const std::string& tag, UINT slot)

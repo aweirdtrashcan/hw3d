@@ -133,7 +133,7 @@ public:
 };
 
 template<typename C>
-class TransformConstantBuffer : public ConstantBuffer<C>
+class VertexPixelConstantBuffer : public ConstantBuffer<C>
 {
 	using Bindable::GetContext;
 	using ConstantBuffer<C>::buffer;
@@ -147,21 +147,21 @@ public:
 
 	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, UINT slot)
 	{
-		return Codex::Resolve<TransformConstantBuffer<C>>(gfx, slot);
+		return Codex::Resolve<VertexPixelConstantBuffer<C>>(gfx, slot);
 	}
 
 	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, const C& data, UINT slot)
 	{
-		return Codex::Resolve<TransformConstantBuffer<C>>(gfx, data, slot);
+		return Codex::Resolve<VertexPixelConstantBuffer<C>>(gfx, data, slot);
 	}
 
 	static std::string GenerateUID(const C& data, UINT slot)
 	{
-		return std::format("{}TSCB#{}", typeid(TransformConstantBuffer<C>).name(), slot);
+		return std::format("{}TSCB#{}", typeid(VertexPixelConstantBuffer<C>).name(), slot);
 	}
 
 	static std::string GenerateUID(UINT slot)
 	{
-		return std::format("{}TSCB#{}", typeid(TransformConstantBuffer<C>).name(), slot);
+		return std::format("{}TSCB#{}", typeid(VertexPixelConstantBuffer<C>).name(), slot);
 	}
 };

@@ -19,7 +19,8 @@ public:
 	static std::string GenerateUID(const Drawable& parent, const std::string& tag, UINT slot = 0);
 
 private:
-	static inline std::shared_ptr<Bindable> vcbuf;
+	// Bindable = VertexPixelConstantBuffer<Transforms>
+	static std::shared_ptr<Bindable> vcbuf;
 	const Drawable& parent;
 };
 

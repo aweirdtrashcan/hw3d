@@ -25,6 +25,8 @@ namespace hw3dexp
 			Float3Color,
 			Float4Color,
 			BGRAColor,
+			Tangent,
+			BiTangent,
 			Count,
 		};
 		template<ElementType> struct Map;
@@ -76,6 +78,20 @@ namespace hw3dexp
 			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 			static constexpr const char* semantic = "Color";
 			static constexpr const char* code = "C8";
+		};
+		template<> struct Map<Tangent>
+		{
+			using SysType = DirectX::XMFLOAT3;
+			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+			static constexpr const char* semantic = "Tangent";
+			static constexpr const char* code = "T3";
+		};
+		template<> struct Map<BiTangent>
+		{
+			using SysType = DirectX::XMFLOAT3;
+			static constexpr DXGI_FORMAT dxgiFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+			static constexpr const char* semantic = "BiTangent";
+			static constexpr const char* code = "BT3";
 		};
 
 		class Element
@@ -160,6 +176,12 @@ namespace hw3dexp
 				break;
 			case VertexLayout::BGRAColor:
 				SetAttribute<VertexLayout::BGRAColor>(pAttribute, std::forward<T>(val));
+				break;
+			case VertexLayout::Tangent:
+				SetAttribute<VertexLayout::Tangent>(pAttribute, std::forward<T>(val));
+				break;
+			case VertexLayout::BiTangent:
+				SetAttribute<VertexLayout::BiTangent>(pAttribute, std::forward<T>(val));
 				break;
 			default:
 				assert("Bad element type" && false);

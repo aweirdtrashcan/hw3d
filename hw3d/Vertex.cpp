@@ -40,6 +40,10 @@ namespace hw3dexp
 			return sizeof(Map<Float4Color>::SysType);
 		case BGRAColor:
 			return sizeof(Map<BGRAColor>::SysType);
+		case Tangent:
+			return sizeof(Map<Tangent>::SysType);
+		case BiTangent:
+			return sizeof(Map<BiTangent>::SysType);
 		}
 		assert("Invalid element type" && false);
 		return 0u;
@@ -75,6 +79,12 @@ namespace hw3dexp
 		case hw3dexp::VertexLayout::BGRAColor:
 			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::BGRAColor>::code;
 			break;
+		case Tangent:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::Tangent>::code;
+			break;
+		case BiTangent:
+			return hw3dexp::VertexLayout::Map<hw3dexp::VertexLayout::BiTangent>::code;
+			break;
 		}
 		assert("Invalid element type" && false);
 		return "Invalid";
@@ -98,6 +108,10 @@ namespace hw3dexp
 			return GenerateDesc<Float4Color>(GetOffset());
 		case BGRAColor:
 			return GenerateDesc<BGRAColor>(GetOffset());
+		case Tangent:
+			return GenerateDesc<Tangent>(GetOffset());
+		case BiTangent:
+			return GenerateDesc<BiTangent>(GetOffset());
 		}
 		assert("Invalid element type" && false);
 		return { "INVALID",0,DXGI_FORMAT_UNKNOWN,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 };

@@ -9,13 +9,13 @@ class Codex
 {
 public:
 	template<class Type, typename... Params>
-	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, Params&&... params) noexcept
+	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, Params&&... params) noexcept(!IS_DEBUG)
 	{
 		return Get().Resolve_<Type>(gfx, std::forward<Params>(params)...);
 	}
 private:
 	template<class Type, typename... Params>
-	std::shared_ptr<Bindable> Resolve_(Graphics* gfx, Params&&... params) noexcept
+	std::shared_ptr<Bindable> Resolve_(Graphics* gfx, Params&&... params) noexcept(!IS_DEBUG)
 	{
 		std::string key = Type::GenerateUID(std::forward<Params>(params)...);
 		auto bind = binds.find(key);

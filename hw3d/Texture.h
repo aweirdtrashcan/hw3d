@@ -5,6 +5,29 @@
 
 class Texture : public Bindable
 {
+protected:
+	class TextureImage
+	{
+	public:
+		TextureImage(const std::string& path);
+		~TextureImage();
+
+		DXGI_FORMAT GetImageFormat() const noexcept(!IS_DEBUG);
+		UINT GetImagePitch() const noexcept;
+		UINT GetWidth() const noexcept;
+		UINT GetHeight() const noexcept;
+		const void* GetImageRawData() const noexcept;
+
+	private:
+		void ConvertPng() noexcept(!IS_DEBUG);
+	private:
+		std::string path;
+		unsigned char* imageData;
+		int width;
+		int height;
+		int channels;
+		bool converted;
+	};
 public:
 	Texture(class Graphics* gfx, const std::string& path, UINT bindSlot);
 	virtual void Bind(Graphics* gfx) noexcept override;
