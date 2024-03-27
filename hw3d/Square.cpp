@@ -58,7 +58,7 @@ Square::Square(Graphics* gfx, float scaleFactor)
 	AddBind(Sampler::Resolve(gfx));
 
 	PSMaterialConstant mat{};
-	mat.albedoColor = { 1.0f,1.0f,1.0f };
+	mat.diffuseColor = { 1.0f,1.0f,1.0f };
 	
 	AddBind(PixelConstantBuffer<PSMaterialConstant>::Resolve(gfx, mat, 1));
 	

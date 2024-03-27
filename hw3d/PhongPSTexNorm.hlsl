@@ -12,9 +12,8 @@ cbuffer LightCBuf : register(b0)
 
 cbuffer MaterialCBuf : register(b1)
 {
-    float3 albedoColor;
+    float3 diffuseColor;
     float specularIntensity;
-    float3 fresnelR0;
     float specularPower;
     float shininess;
 };
@@ -62,7 +61,7 @@ float4 main(PSIn psin) : SV_Target
     n = n * 2.0f - 1.0f;
     n = mul(n, tanToView);
     
-    const float3 diffuse = albedoColor * diffuseIntensity * att * max(0.0f, dot(dirToL, n));
+    const float3 diffuse = diffuseColor * diffuseIntensity * att * max(0.0f, dot(dirToL, n));
 	// reflected light vector
     const float3 w = n * dot(lightVec, n);
     const float3 r = w * 2.0f - lightVec;
@@ -70,7 +69,7 @@ float4 main(PSIn psin) : SV_Target
     const float4 specularSample = specularTex.Sample(ss, psin.texCoord);
     const float3 specularReflectionColor = specularSample.rgb;
     const float specularPower = pow(2.0f, specularSample.a * 13.0f);
-    const float3 specular = att * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
+    const float3 specular = att * (diffuseColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
 	// final color
     return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, psin.texCoord).rgb + specular * specularReflectionColor), 1.0f);
 }

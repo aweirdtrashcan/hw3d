@@ -284,14 +284,14 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
     bool hasNormals = false;
 
     PSMaterialConstant psMaterial{};
-    psMaterial.albedoColor = { 1.0f, 1.0f, 1.0f };
+    psMaterial.diffuseColor = { 1.0f, 1.0f, 1.0f };
     psMaterial.specularIntensity = 1.0f;
 
     if (mesh->mMaterialIndex >= 0)
     {
         const aiMaterial* material = materials[mesh->mMaterialIndex];
 
-        material->Get(AI_MATKEY_COLOR_DIFFUSE, psMaterial.albedoColor);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, psMaterial.diffuseColor);
 
         aiString texFileName;
         

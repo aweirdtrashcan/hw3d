@@ -12,9 +12,8 @@ cbuffer LightCBuf : register(b0)
 
 cbuffer MaterialCBuf : register(b1)
 {
-    float3 albedoColor;
+    float3 diffuseColor;
     float specularIntensity;
-    float3 fresnelR0;
     float specularPower;
     float shininess;
 };
@@ -60,12 +59,12 @@ float4 main(PSIn psin) : SV_Target
     float3 n = normTex.Sample(ss, psin.texCoord).xyz * 2.0f - 1.0f;
     n = mul(n, tanToView);
     
-    const float3 diffuse = albedoColor * diffuseIntensity * att * max(0.0f, dot(dirToL, n));
+    const float3 diffuse = diffuseColor * diffuseIntensity * att * max(0.0f, dot(dirToL, n));
 	// reflected light vector
     const float3 w = n * dot(lightVec, n);
     const float3 r = w * 2.0f - lightVec;
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
-    const float3 specular = att * (albedoColor * diffuseIntensity) * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
+    const float3 specular = att * (diffuseColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
 	// final color
     return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, psin.texCoord).rgb + specular), 1.0f);
 }
