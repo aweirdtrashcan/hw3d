@@ -53,17 +53,17 @@ Square::Square(Graphics* gfx, float scaleFactor)
 	AddBind(InputLayout::Resolve(gfx, vLayout, vBlob));
 
 	AddBind(vShader);
-	AddBind(PixelShader::Resolve(gfx, "PhongPSTexNorm.cso"));
+	AddBind(PixelShader::Resolve(gfx, "PhongPSTexNoSpec.cso"));
 	
 	AddBind(Sampler::Resolve(gfx));
 
 	PSMaterialConstant mat{};
+	mat.albedoColor = { 1.0f,1.0f,1.0f };
 	
 	AddBind(PixelConstantBuffer<PSMaterialConstant>::Resolve(gfx, mat, 1));
 	
 	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_basecolor.jpg"));
-	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_roughness.jpg", 1));
-	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_normal.jpg", 2));
+	AddBind(Texture::Resolve(gfx, "C:/Users/Diego/source/repos/hw3d/hw3d/Models/brick/Brick_Wall_018_normal.jpg", 1));
 
 	AddBind(TransformCbuf::Resolve(gfx, *this, "square_tcb", 2));
 }

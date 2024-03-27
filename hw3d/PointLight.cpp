@@ -6,10 +6,12 @@
 
 PointLight::PointLight(Graphics* gfx, const Camera& camera, float radius)
 	:
-	mesh(new SolidSphere(gfx, radius)),
+	mesh(new SolidSphere(gfx, radius, 1)),
 	cbGpu(gfx, 0),
 	camera(camera)
-{}
+{
+	
+}
 
 void PointLight::SpawnControlWindow() noexcept
 {

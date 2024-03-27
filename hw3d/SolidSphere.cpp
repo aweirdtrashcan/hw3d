@@ -5,7 +5,7 @@
 #include "BindableCodex.h"
 #include "ShaderStructs.h"
 
-SolidSphere::SolidSphere(Graphics* gfx, float radius)
+SolidSphere::SolidSphere(Graphics* gfx, float radius, UINT bindSlot)
 {
 	namespace dx = DirectX;
 
@@ -35,7 +35,7 @@ SolidSphere::SolidSphere(Graphics* gfx, float radius)
 	AddBind(PixelShader::Resolve(gfx, "SolidPS.cso"));
 
 	using PSConstBuffer = PixelConstantBuffer<PSColorConstant>;
-	std::shared_ptr<PSConstBuffer> pCb = std::static_pointer_cast<PSConstBuffer>(PSConstBuffer::Resolve(gfx, colorConst, 3));
+	std::shared_ptr<PSConstBuffer> pCb = std::static_pointer_cast<PSConstBuffer>(PSConstBuffer::Resolve(gfx, colorConst, bindSlot));
 	cBuf = pCb.get();
 
 	AddBind(pCb);
