@@ -8,6 +8,14 @@ class Texture : public Bindable
 protected:
 	class TextureImage
 	{
+	private:
+		class TextureImageLoadException : public ChiliException
+		{
+		public:
+			TextureImageLoadException(int line, const char* file, std::string reason) noexcept;
+			virtual const char* GetType() const noexcept;
+			virtual const char* what() const noexcept;
+		};
 	public:
 		TextureImage(const std::string& path);
 		~TextureImage();
@@ -17,7 +25,7 @@ protected:
 		UINT GetWidth() const noexcept;
 		UINT GetHeight() const noexcept;
 		const void* GetImageRawData() const noexcept;
-
+		bool HasAlpha() const noexcept { return !converted; }
 	private:
 		bool ConvertPng() noexcept(!IS_DEBUG);
 		void ConvertXXXA() noexcept(!IS_DEBUG);
@@ -34,7 +42,9 @@ public:
 	virtual void Bind(Graphics* gfx) noexcept override;
 	static std::shared_ptr<Bindable> Resolve(Graphics* gfx, const std::string& path, UINT bindSlot = 0);
 	static std::string GenerateUID(const std::string& path, UINT bindSlot);
+	bool HasAlpha() const noexcept;
 private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> pSRV;
 	UINT bindSlot;
+	bool bHasAlpha = false;
 };

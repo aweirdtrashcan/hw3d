@@ -16,6 +16,8 @@ cbuffer MaterialCBuf : register(b1)
     float specularIntensity;
     float specularPower;
     float shininess;
+    bool hasGloss;
+    float specularPowerConst;
 };
 
 cbuffer CBuf : register(b2)
@@ -45,7 +47,7 @@ struct PSIn
 
 float4 main(PSIn psin) : SV_Target
 {
-    float3 lightVec = lightPos - psin.worldViewPos;
+    float3 lightVec = (float3) mul(float4(lightPos, 1.0f), modelView) - psin.worldViewPos;
     float distL = length(lightVec);
     float3 dirToL = lightVec / distL;
     
@@ -68,7 +70,15 @@ float4 main(PSIn psin) : SV_Target
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
     const float4 specularSample = specularTex.Sample(ss, psin.texCoord);
     const float3 specularReflectionColor = specularSample.rgb;
-    const float specularPower = pow(2.0f, specularSample.a * 13.0f);
+    const float specularPower;
+    if (hasGloss)
+    {
+        specularPower = pow(2.0f, specularSample.a * 13.0f);
+    }
+    else
+    {
+        specularPower = specularPowerConst;
+    }
     const float3 specular = att * (diffuseColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
 	// final color
     return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, psin.texCoord).rgb + specular * specularReflectionColor), 1.0f);

@@ -32,6 +32,8 @@ void Camera::SpawnControlWindow() noexcept
 		ImGui::Text("Orientation");
 		ImGui::SliderAngle("Pitch", &pitch, -90.f, 90.f);
 		ImGui::SliderAngle("Yaw", &yaw, -90.f, 90.f);
+		ImGui::Text("Camera Settings");
+		ImGui::SliderFloat("Move Speed", &travelSpeed, 0.0f, 300.f);
 		if (ImGui::Button("Reset"))
 		{
 			Reset();

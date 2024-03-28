@@ -8,5 +8,6 @@ struct alignas(16) PSMaterialConstant
 	float specularIntensity = 0.18f;
 	float specularPower = 1.0f;
 	float shininess = 0.1f;
-	float p[2];
+	int hasGloss = false;
+	float p[1];
 };

@@ -1,5 +1,0 @@
-﻿newmtl M_Frame
-	map_Kd M_Frame_D.bmp
-	map_Ks M_Frame_S.bmp
-	bump M_Frame_N.bmp
-

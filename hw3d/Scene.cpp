@@ -319,6 +319,11 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
         }
         else
         {
+            for (unsigned int i = 0; i < material->mNumProperties; i++)
+            {
+                const aiMaterialProperty* p = material->mProperties[i];
+                printf("%s\n", p->mKey.C_Str());
+            }
             float shininess;
             material->Get(AI_MATKEY_SHININESS, shininess);
             psMaterial.specularPower = shininess;

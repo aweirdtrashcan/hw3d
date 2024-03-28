@@ -5,6 +5,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define IMG_EXCEPTION(reason) (TextureImage::TextureImageLoadException(__LINE__, __FILE__, reason))
+
 Texture::Texture(Graphics* gfx, const std::string& path, UINT bindSlot)
 	:
 	bindSlot(bindSlot)
@@ -48,6 +50,8 @@ Texture::Texture(Graphics* gfx, const std::string& path, UINT bindSlot)
 		&srvDesc,
 		&pSRV
 	));
+
+	bHasAlpha = image.HasAlpha();
 }
 
 void Texture::Bind(Graphics* gfx) noexcept
@@ -65,6 +69,11 @@ std::string Texture::GenerateUID(const std::string& path, UINT bindSlot)
 	return std::format("{}#{}#{}", typeid(Texture).name(), path, bindSlot);
 }
 
+bool Texture::HasAlpha() const noexcept
+{
+	return bHasAlpha;
+}
+
 // Image
 Texture::TextureImage::TextureImage(const std::string& path)
 	:
@@ -76,6 +85,10 @@ Texture::TextureImage::TextureImage(const std::string& path)
 	converted(false)
 {
 	imageData = stbi_load(path.c_str(), &width, &height, &channels, 0);
+	if (!imageData)
+	{
+		 throw IMG_EXCEPTION(std::format("{} - {}", stbi_failure_reason(), path));
+	}
 	if (!ConvertPng()) {
 		ConvertXXXA();
 	}
@@ -102,14 +115,10 @@ DXGI_FORMAT Texture::TextureImage::GetImageFormat() const noexcept(!IS_DEBUG)
 	{
 	case 1:
 		return DXGI_FORMAT_R8G8B8A8_UNORM;
-	case 2:
-		throw std::exception("Unknown format");
-	case 3:
-		throw std::exception("Unknown format");
 	case 4:
 		return DXGI_FORMAT_R8G8B8A8_UNORM;
 	}
-	throw std::exception("Unknown format");
+	throw IMG_EXCEPTION(std::format("Unknown image format of {} layers in {}", channels, path));
 }
 
 UINT Texture::TextureImage::GetImagePitch() const noexcept
@@ -235,4 +244,22 @@ void Texture::TextureImage::ConvertXXXA() noexcept(!IS_DEBUG)
 
 		imageData = png;
 	}
+}
+
+Texture::TextureImage::TextureImageLoadException::TextureImageLoadException(int line, const char* file, std::string reason) noexcept
+	:
+	ChiliException(line, file)
+{
+	whatBuffer = reason;
+}
+
+const char* Texture::TextureImage::TextureImageLoadException::GetType() const noexcept
+{
+	return "Texture Image Load Exception";
+}
+
+const char* Texture::TextureImage::TextureImageLoadException::what() const noexcept
+{
+	whatBuffer = std::format("{}\n{}\n\n{}", GetType(), GetOriginString(), whatBuffer);
+	return whatBuffer.c_str();
 }
