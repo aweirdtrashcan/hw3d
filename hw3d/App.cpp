@@ -32,7 +32,7 @@ App::App()
 {
 	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveFovLH(45.f, (float)wnd.GetWidth() / (float)wnd.GetHeight(), 0.1f, 10000.f));
 
-	model = new Scene(wnd.GfxPtr(), "Models/GoblinX.obj");
+	model = new Scene(wnd.GfxPtr(), "Models/nanosuit.obj");
 	//square = new Square(wnd.GfxPtr(), 10.f);
 }
 

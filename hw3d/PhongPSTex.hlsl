@@ -16,6 +16,8 @@ cbuffer MaterialCBuf : register(b1)
     float specularIntensity;
     float specularPower;
     float shininess;
+    bool hasGloss;
+    float specularPowerConst;
 };
 
 struct PSIn
@@ -47,7 +49,7 @@ float4 main(PSIn psin) : SV_Target
     const float3 w = psin.wvNormal * dot(lightVec, psin.wvNormal);
     const float3 r = w * 2.0f - lightVec;
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
-    const float3 specular = att * (diffuseColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), 100.f);
+    const float3 specular = att * (diffuseColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
 	// final color
     return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, psin.texCoord).rgb + specular), 1.0f);
 }

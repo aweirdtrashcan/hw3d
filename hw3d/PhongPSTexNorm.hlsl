@@ -28,7 +28,6 @@ cbuffer CBuf : register(b2)
 };
 
 Texture2D tex : register(t0);
-Texture2D specularTex : register(t1);
 Texture2D normTex : register(t2);
 SamplerState ss;
  
@@ -47,7 +46,7 @@ struct PSIn
 
 float4 main(PSIn psin) : SV_Target
 {
-    float3 lightVec = (float3) mul(float4(lightPos, 1.0f), modelView) - psin.worldViewPos;
+    float3 lightVec = lightPos - psin.worldViewPos;
     float distL = length(lightVec);
     float3 dirToL = lightVec / distL;
     
@@ -59,8 +58,7 @@ float4 main(PSIn psin) : SV_Target
         psin.wvNormal
     );
     
-    float3 n = normTex.Sample(ss, psin.texCoord);
-    n = n * 2.0f - 1.0f;
+    float3 n = normTex.Sample(ss, psin.texCoord).xyz * 2.0f - 1.0f;
     n = mul(n, tanToView);
     
     const float3 diffuse = diffuseColor * diffuseIntensity * att * max(0.0f, dot(dirToL, n));
@@ -68,18 +66,7 @@ float4 main(PSIn psin) : SV_Target
     const float3 w = n * dot(lightVec, n);
     const float3 r = w * 2.0f - lightVec;
 	// calculate specular intensity based on angle between viewing vector and reflection vector, narrow with power function
-    const float4 specularSample = specularTex.Sample(ss, psin.texCoord);
-    const float3 specularReflectionColor = specularSample.rgb;
-    const float specularPower;
-    if (hasGloss)
-    {
-        specularPower = pow(2.0f, specularSample.a * 13.0f);
-    }
-    else
-    {
-        specularPower = specularPowerConst;
-    }
     const float3 specular = att * (diffuseColor * diffuseIntensity) * specularIntensity * pow(max(0.0f, dot(normalize(-r), normalize(psin.worldViewPos))), specularPower);
 	// final color
-    return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, psin.texCoord).rgb + specular * specularReflectionColor), 1.0f);
+    return float4(saturate((diffuse + ambientColor) * tex.Sample(ss, psin.texCoord).rgb + specular), 1.0f);
 }

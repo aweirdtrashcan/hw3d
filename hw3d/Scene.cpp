@@ -239,31 +239,7 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh)
 
 std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const aiMaterial* const* materials)
 {
-    hw3dexp::VertexBuffer vbuf(
-        hw3dexp::VertexLayout()
-        .Append(hw3dexp::VertexLayout::Position3D)
-        .Append(hw3dexp::VertexLayout::Normal)
-        .Append(hw3dexp::VertexLayout::Texture2D)
-        .Append(hw3dexp::VertexLayout::Tangent)
-        .Append(hw3dexp::VertexLayout::BiTangent)
-    );
-
-    for (unsigned int i = 0; i < mesh->mNumVertices; i++)
-    {
-        DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
-        DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
-        DirectX::XMFLOAT2 texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
-        DirectX::XMFLOAT3* tangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mTangents[i]);
-        DirectX::XMFLOAT3* biTangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mBitangents[i]);
-
-        vbuf.EmplaceBack(
-            *position,
-            *normal,
-            texCoord,
-            *tangent,
-            *biTangent
-        );
-    }
+    
 
     std::vector<unsigned int> indices(mesh->mNumFaces * 3);
 
@@ -277,21 +253,24 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
 
     std::vector<std::shared_ptr<Bindable>> bindables;
 
-    bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
     bindables.push_back(IndexBuffer::Resolve(gfx, indices, std::string(mesh->mName.C_Str()) + "IndexBuffer"));
 
     bool hasSpecular = false;
     bool hasNormals = false;
+    bool hasDiffuse = false;
+    bool hasAlphaGloss = false;
 
     PSMaterialConstant psMaterial{};
     psMaterial.diffuseColor = { 1.0f, 1.0f, 1.0f };
     psMaterial.specularIntensity = 1.0f;
 
+    std::shared_ptr<Texture> diffuseTex;
+    std::shared_ptr<Texture> normalTex;
+    std::shared_ptr<Texture> specularTex;
+
     if (mesh->mMaterialIndex >= 0)
     {
         const aiMaterial* material = materials[mesh->mMaterialIndex];
-
-        material->Get(AI_MATKEY_COLOR_DIFFUSE, psMaterial.diffuseColor);
 
         aiString texFileName;
         
@@ -300,7 +279,8 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
             std::string texPath = std::format("Models/{}", texFileName.C_Str());
 
             Log::Debug(std::format("Loading diffuse texture \"{}\"", texPath));
-            bindables.push_back(Texture::Resolve(gfx, texPath));
+            diffuseTex = std::static_pointer_cast<Texture>(Texture::Resolve(gfx, texPath));
+            hasDiffuse = true;
             Log::Debug(std::format("Diffuse texture \"{}\" was loaded", texPath));
             
             bindables.push_back(Sampler::Resolve(gfx));
@@ -312,21 +292,12 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
             hasSpecular = true;
 
             Log::Debug(std::format("Loading specular texture \"{}\"", texPath));
-            bindables.push_back(Texture::Resolve(gfx, texPath, 1));
+            std::shared_ptr<Texture> tex = std::static_pointer_cast<Texture>(Texture::Resolve(gfx, texPath, 1));
+            hasAlphaGloss = tex->HasAlpha();
+            specularTex = tex;
             Log::Debug(std::format("Specular texture \"{}\" was loaded", texPath));
 
             bindables.push_back(Sampler::Resolve(gfx));
-        }
-        else
-        {
-            for (unsigned int i = 0; i < material->mNumProperties; i++)
-            {
-                const aiMaterialProperty* p = material->mProperties[i];
-                printf("%s\n", p->mKey.C_Str());
-            }
-            float shininess;
-            material->Get(AI_MATKEY_SHININESS, shininess);
-            psMaterial.specularPower = shininess;
         }
 
         if (material->GetTexture(aiTextureType::aiTextureType_NORMALS, 0, &texFileName) == aiReturn_SUCCESS)
@@ -335,43 +306,186 @@ std::unique_ptr<Mesh> Scene::ParseMesh(Graphics* gfx, const aiMesh* mesh, const 
             hasNormals = true;
 
             Log::Debug(std::format("Loading normals texture \"{}\"", texPath));
-            bindables.push_back(Texture::Resolve(gfx, texPath, 2));
+            std::shared_ptr<Texture> tex = std::static_pointer_cast<Texture>(Texture::Resolve(gfx, texPath, 2));
+            hasAlphaGloss = tex->HasAlpha();
+            normalTex = tex;
             Log::Debug(std::format("Normals texture \"{}\" was loaded", texPath));
 
             bindables.push_back(Sampler::Resolve(gfx));
         }
-    }
 
-    if (hasNormals)
-    {
-        if (hasSpecular)
+        psMaterial.hasGloss = hasAlphaGloss;
+        if (!hasAlphaGloss)
         {
-            std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
-            Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
-            bindables.push_back(vShader);
-
-            bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNorm.cso"));
-
-            bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
-        }
-        else
-        {
-            std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
-            Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
-            bindables.push_back(vShader);
-
-            bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNoSpec.cso"));
-
-            bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
+            float shininess;
+            material->Get(AI_MATKEY_SHININESS, shininess);
+            psMaterial.specularPower = shininess;
         }
     }
-    else
+
+    if (hasNormals && hasSpecular && hasDiffuse)
     {
+        hw3dexp::VertexBuffer vbuf(
+            hw3dexp::VertexLayout()
+            .Append(hw3dexp::VertexLayout::Position3D)
+            .Append(hw3dexp::VertexLayout::Normal)
+            .Append(hw3dexp::VertexLayout::Texture2D)
+            .Append(hw3dexp::VertexLayout::Tangent)
+            .Append(hw3dexp::VertexLayout::BiTangent)
+        );
+
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        {
+            DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
+            DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
+            DirectX::XMFLOAT2 texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+            DirectX::XMFLOAT3* tangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mTangents[i]);
+            DirectX::XMFLOAT3* biTangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mBitangents[i]);
+
+            vbuf.EmplaceBack(
+                *position,
+                *normal,
+                texCoord,
+                *tangent,
+                *biTangent
+            );
+        }
+
+        bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
+        bindables.push_back(normalTex);
+        bindables.push_back(specularTex);
+        bindables.push_back(diffuseTex);
+
+        std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
+        Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+        bindables.push_back(vShader);
+
+        bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNormSpec.cso"));
+
+        bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
+    }
+    else if (hasDiffuse && hasNormals && !hasSpecular)
+    {
+        hw3dexp::VertexBuffer vbuf(
+            hw3dexp::VertexLayout()
+            .Append(hw3dexp::VertexLayout::Position3D)
+            .Append(hw3dexp::VertexLayout::Normal)
+            .Append(hw3dexp::VertexLayout::Texture2D)
+            .Append(hw3dexp::VertexLayout::Tangent)
+            .Append(hw3dexp::VertexLayout::BiTangent)
+        );
+
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        {
+            DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
+            DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
+            DirectX::XMFLOAT2 texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+            DirectX::XMFLOAT3* tangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mTangents[i]);
+            DirectX::XMFLOAT3* biTangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mBitangents[i]);
+
+            vbuf.EmplaceBack(
+                *position,
+                *normal,
+                texCoord,
+                *tangent,
+                *biTangent
+            );
+        }
+
+        bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
+        bindables.push_back(normalTex);
+        bindables.push_back(diffuseTex);
+
+        std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
+        Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+        bindables.push_back(vShader);
+
+        bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTexNorm.cso"));
+
+        bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
+    }
+    else if (hasDiffuse && !hasNormals && !hasSpecular)
+    {
+        hw3dexp::VertexBuffer vbuf(
+            hw3dexp::VertexLayout()
+            .Append(hw3dexp::VertexLayout::Position3D)
+            .Append(hw3dexp::VertexLayout::Normal)
+            .Append(hw3dexp::VertexLayout::Texture2D)
+            .Append(hw3dexp::VertexLayout::Tangent)
+            .Append(hw3dexp::VertexLayout::BiTangent)
+        );
+
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        {
+            DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
+            DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
+            DirectX::XMFLOAT2 texCoord = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+            DirectX::XMFLOAT3* tangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mTangents[i]);
+            DirectX::XMFLOAT3* biTangent = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mBitangents[i]);
+
+            vbuf.EmplaceBack(
+                *position,
+                *normal,
+                texCoord,
+                *tangent,
+                *biTangent
+            );
+        }
+
+        bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
+        bindables.push_back(diffuseTex);
+
         std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVSTex.cso");
         Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
         bindables.push_back(vShader);
 
         bindables.push_back(PixelShader::Resolve(gfx, "PhongPSTex.cso"));
+
+        bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
+    }
+    else if (!hasNormals && !hasSpecular && !hasDiffuse)
+    {
+        hw3dexp::VertexBuffer vbuf(
+            hw3dexp::VertexLayout()
+            .Append(hw3dexp::VertexLayout::Position3D)
+            .Append(hw3dexp::VertexLayout::Normal)
+        );
+
+        const aiMaterial* material = materials[mesh->mMaterialIndex];
+
+        /*for (unsigned int i = 0; i < material->mNumProperties; i++)
+        {
+            const aiMaterialProperty* p = material->mProperties[i];
+            if (strcmp(p->mKey.C_Str(), "$clr.diffuse") == 0)
+            {
+                memcpy(&psMaterial.diffuseColor, p->mData, p->mDataLength);
+            }
+            printf("\n");
+        }*/
+
+        aiColor3D diffuse;
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse);
+
+        psMaterial.diffuseColor = *(DirectX::XMFLOAT3*)&diffuse;
+
+        for (unsigned int i = 0; i < mesh->mNumVertices; i++)
+        {
+            DirectX::XMFLOAT3* position = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mVertices[i]);
+            DirectX::XMFLOAT3* normal = reinterpret_cast<DirectX::XMFLOAT3*>(&mesh->mNormals[i]);
+
+            vbuf.EmplaceBack(
+                *position,
+                *normal
+            );
+        }
+
+        bindables.push_back(VertexBuffer::Resolve(gfx, vbuf, std::string(mesh->mName.C_Str()) + "VertexBuffer"));
+
+        std::shared_ptr<Bindable> vShader = VertexShader::Resolve(gfx, "PhongVS.cso");
+        Microsoft::WRL::ComPtr<ID3DBlob> vBlob = std::static_pointer_cast<VertexShader>(vShader)->GetBytecode();
+        bindables.push_back(vShader);
+
+        bindables.push_back(PixelShader::Resolve(gfx, "PhongPS.cso"));
 
         bindables.push_back(InputLayout::Resolve(gfx, vbuf.GetLayout(), vBlob));
     }
